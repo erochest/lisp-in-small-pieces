@@ -6,6 +6,10 @@ use clap_verbosity_flag::Verbosity;
 use env_logger;
 use human_panic::setup_panic;
 
+mod error;
+
+use error::Result;
+
 // TODO: read from a file and dump out syntax
 // TODO: parse an integer (`42`)
 // TODO: read from stdin
@@ -22,7 +26,7 @@ use human_panic::setup_panic;
 // TODO: parse a quoted function name (`#'foobar`)
 // TODO: parse comments
 
-fn main() {
+fn main() -> Result<()> {
     setup_panic!();
     let args = Cli::parse();
     env_logger::Builder::new()
@@ -30,6 +34,8 @@ fn main() {
         .init();
 
     println!("Hello, world!");
+
+    Ok(())
 }
 
 #[derive(Debug, Parser)]
