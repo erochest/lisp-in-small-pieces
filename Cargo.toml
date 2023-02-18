@@ -7,8 +7,19 @@ edition = "2021"
 
 [dependencies]
 clap = "*"
+clap-verbosity-flag = "2.0.0"
+confy = "0.5.1"
+env_logger = "0.10.0"
+human-panic = "1.1.0"
+log = "0.4.17"
 nom = "*"
+structopt = "0.3.26"
 
 [dev-dependencies]
 assert_cmd = "*"
+assert_fs = "1.0.10"
+duct = "0.13.6"
+predicates = "2.1.5"
 pretty_assertions = "*"
+spectral = "0.6.0"
+tempfile = "3.3.0"
