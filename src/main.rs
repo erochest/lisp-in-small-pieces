@@ -24,8 +24,10 @@ use human_panic::setup_panic;
 
 fn main() {
     setup_panic!();
-    env_logger::init();
-    let _args = Cli::parse();
+    let args = Cli::parse();
+    env_logger::Builder::new()
+        .filter_level(args.verbose.log_level_filter())
+        .init();
 
     println!("Hello, world!");
 }
