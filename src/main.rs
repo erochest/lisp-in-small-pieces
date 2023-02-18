@@ -1,4 +1,11 @@
 
+use std::path::PathBuf;
+
+use clap::Parser;
+use clap_verbosity_flag::Verbosity;
+use env_logger;
+use human_panic::setup_panic;
+
 // TODO: read from a file and dump out syntax
 // TODO: parse an integer (`42`)
 // TODO: read from stdin
@@ -16,5 +23,18 @@
 // TODO: parse comments
 
 fn main() {
+    setup_panic!();
+    env_logger::init();
+    let _args = Cli::parse();
+
     println!("Hello, world!");
+}
+
+#[derive(Debug, Parser)]
+struct Cli {
+    #[clap(flatten)]
+    verbose: Verbosity,
+
+    #[arg(short, long, help = "The input file to read.")]
+    input: PathBuf,
 }
