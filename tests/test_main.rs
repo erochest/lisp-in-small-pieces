@@ -13,9 +13,11 @@ fn test_main() {
 
 #[test]
 fn test_empty_file() {
-    Command::cargo_bin(env!("CARGO_PKG_NAME"))
+    let assert = Command::cargo_bin(env!("CARGO_PKG_NAME"))
         .unwrap()
         .args(&["--input".to_string(), "tests/data/empty.fth".to_string()])
         .assert()
         .success();
+    let output = assert.get_output();
+    assert!(String::from_utf8(output.stdout.clone()).unwrap() == "".to_string());
 }

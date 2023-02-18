@@ -33,8 +33,6 @@ fn main() -> Result<()> {
         .filter_level(args.verbose.log_level_filter())
         .init();
 
-    println!("Hello, world!");
-
     Ok(())
 }
 
