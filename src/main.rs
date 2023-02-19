@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::{path::PathBuf, fs::File, io::Read};
 
 use clap::{Parser, Subcommand};
 use clap_verbosity_flag::Verbosity;
@@ -8,8 +8,8 @@ use human_panic::setup_panic;
 mod error;
 
 use error::Result;
+use serde::Serialize;
 
-// TODO: parse an integer (`42`)
 // TODO: read from stdin
 // TODO: parse a symbol (`foobar`)
 // TODO: parse a float (`3.14159`)
@@ -31,7 +31,36 @@ fn main() -> Result<()> {
         .filter_level(args.verbose.log_level_filter())
         .init();
 
+    match args.command {
+        Command::Parse { input } => {
+            let mut reader = File::open(input)?;
+            let tokens = parse(&mut reader)?;
+            for token in tokens {
+                println!("{}", serde_json::to_string(&token)?);
+            }
+        },
+    };
+
     Ok(())
+}
+
+#[derive(Debug, Serialize)]
+#[serde(tag = "type")]
+enum Token {
+    Integer {
+        value: usize
+    },
+}
+
+fn parse<R: Read>(reader: &mut R) -> Result<Vec<Token>> {
+    let mut buffer = String::new();
+    reader.read_to_string(&mut buffer)?;
+    let buffer = buffer.trim();
+    if buffer.is_empty() {
+        Ok(vec![])
+    } else {
+        Ok(vec![Token::Integer { value: buffer.trim().parse()? }])
+    }
 }
 
 #[derive(Debug, Parser)]
