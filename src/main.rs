@@ -1,7 +1,7 @@
 
 use std::path::PathBuf;
 
-use clap::Parser;
+use clap::{Parser, Subcommand};
 use clap_verbosity_flag::Verbosity;
 use env_logger;
 use human_panic::setup_panic;
@@ -41,6 +41,15 @@ struct Cli {
     #[clap(flatten)]
     verbose: Verbosity,
 
-    #[arg(short, long, help = "The input file to read.")]
-    input: PathBuf,
+    #[command(subcommand)]
+    command: Command,
+
+}
+
+#[derive(Debug, Subcommand)]
+enum Command {
+    Parse {
+        #[arg(short, long, help = "The input file to read.")]
+        input: PathBuf,
+    },
 }
