@@ -1,4 +1,3 @@
-
 use std::path::PathBuf;
 
 use clap::{Parser, Subcommand};
@@ -10,7 +9,6 @@ mod error;
 
 use error::Result;
 
-// TODO: read from a file and dump out syntax
 // TODO: parse an integer (`42`)
 // TODO: read from stdin
 // TODO: parse a symbol (`foobar`)
@@ -43,7 +41,6 @@ struct Cli {
 
     #[command(subcommand)]
     command: Command,
-
 }
 
 #[derive(Debug, Subcommand)]

@@ -16,7 +16,11 @@ fn test_main() {
 fn test_empty_file() {
     let assert = Command::cargo_bin(env!("CARGO_PKG_NAME"))
         .unwrap()
-        .args(&["parse".to_string(), "--input".to_string(), "tests/data/empty.fth".to_string()])
+        .args(&[
+            "parse".to_string(),
+            "--input".to_string(),
+            "tests/data/empty.fth".to_string(),
+        ])
         .assert()
         .success();
     let output = assert.get_output();
