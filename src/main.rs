@@ -63,6 +63,9 @@ fn parse<R: Read>(reader: &mut R) -> Result<Vec<Token>> {
     }
 }
 
+/// A small lisp implementation.
+/// 
+/// I made this while working through the book *Lisp in Small Pieces*.
 #[derive(Debug, Parser)]
 struct Cli {
     #[clap(flatten)]
@@ -74,8 +77,10 @@ struct Cli {
 
 #[derive(Debug, Subcommand)]
 enum Command {
+    /// Parse a file and print out the tokens.
     Parse {
-        #[arg(short, long, help = "The input file to read.")]
+        /// The input file to read.
+        #[arg(short, long)]
         input: PathBuf,
     },
 }
