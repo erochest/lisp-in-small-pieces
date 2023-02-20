@@ -10,8 +10,6 @@ mod error;
 use error::Result;
 use serde::Serialize;
 
-// TODO: read from stdin
-// TODO: parse a symbol (`foobar`)
 // TODO: parse a float (`3.14159`)
 // TODO: parse a rational number (`2/3`)
 // TODO: parse a string (`"string with spaces"`)
@@ -48,7 +46,10 @@ fn main() -> Result<()> {
 #[serde(tag = "type")]
 enum Token {
     Integer {
-        value: usize
+        value: isize,
+    },
+    Symbol {
+        value: String,
     },
 }
 
@@ -56,10 +57,13 @@ fn parse<R: Read>(reader: &mut R) -> Result<Vec<Token>> {
     let mut buffer = String::new();
     reader.read_to_string(&mut buffer)?;
     let buffer = buffer.trim();
-    if buffer.is_empty() {
-        Ok(vec![])
+
+    if let Ok(value) = buffer.parse() {
+        Ok(vec![Token::Integer { value }])
+    } else if buffer.len() > 0 {
+        Ok(vec![Token::Symbol { value: buffer.to_string() }])
     } else {
-        Ok(vec![Token::Integer { value: buffer.trim().parse()? }])
+        Ok(vec![])
     }
 }
 
