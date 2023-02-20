@@ -19,7 +19,7 @@ fn test_empty_file() {
         .args(&[
             "parse".to_string(),
             "--input".to_string(),
-            "tests/data/empty.fth".to_string(),
+            "tests/data/empty.lisp".to_string(),
         ])
         .assert()
         .success();
@@ -34,7 +34,7 @@ fn test_parse_integer() {
         .args(&[
             "parse".to_string(),
             "--input".to_string(),
-            "tests/data/integer.fth".to_string(),
+            "tests/data/integer.lisp".to_string(),
         ])
         .assert()
         .success();
@@ -54,7 +54,7 @@ fn test_parse_symbol() {
         .args(&[
             "parse".to_string(),
             "--input".to_string(),
-            "tests/data/symbol.fth".to_string(),
+            "tests/data/symbol.lisp".to_string(),
         ])
         .assert()
         .success();
