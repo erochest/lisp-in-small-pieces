@@ -61,27 +61,20 @@ mod tests {
         assert_eq!(actual.unwrap(), vec![]);
     }
 
-    #[test]
-    fn test_parse_integer() {
-        let mut input = "42".as_bytes();
-        let actual = read_lisp(&mut input);
-        assert!(actual.is_ok());
-        assert_eq!(actual.unwrap(), vec![Integer { value: 42 }]);
+    macro_rules! test_parse_token {
+        ($name:ident, $input:expr, $token:expr) => {
+            #[test]
+            fn $name() {
+                let mut input = $input.as_bytes();
+                let actual = read_lisp(&mut input);
+                assert!(actual.is_ok());
+                assert_eq!(actual.unwrap(), vec![$token]);
+            }
+        };
     }
 
-    #[test]
-    fn test_parse_symbol() {
-        let mut input = "  foobar  ".as_bytes();
-        let actual = read_lisp(&mut input);
-        assert!(actual.is_ok());
-        assert_eq!(actual.unwrap(), vec![Symbol { value: "foobar".to_string() }]);
-    }
+    test_parse_token!(parse_integer, "42", Integer { value: 42 });
+    test_parse_token!(parse_symbol, "foobar", Symbol { value: "foobar".to_string() });
+    test_parse_token!(parse_float, "   3.14159   ", Float { value: 3.14159 });
 
-    #[test]
-    fn test_parse_float() {
-        let mut input = "  3.14159  ".as_bytes();
-        let actual = read_lisp(&mut input);
-        assert!(actual.is_ok());
-        assert_eq!(actual.unwrap(), vec![Float { value: 3.14159 }]);
-    }
 }
