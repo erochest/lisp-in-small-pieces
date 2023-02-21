@@ -15,7 +15,7 @@ use crate::error::Result;
 // TODO: parse a quoted function name (`#'foobar`)
 // TODO: parse comments
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, PartialEq)]
 #[serde(tag = "type")]
 pub enum Token {
     Integer {
@@ -42,5 +42,46 @@ pub fn read_lisp<R: Read>(reader: &mut R) -> Result<Vec<Token>> {
         Ok(vec![Token::Symbol { value: buffer.to_string() }])
     } else {
         Ok(vec![])
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use pretty_assertions::assert_eq;
+
+    use crate::reader::{Token, read_lisp};
+
+    use Token::*;
+
+    #[test]
+    fn test_empty_input() {
+        let mut input = "".as_bytes();
+        let actual = read_lisp(&mut input);
+        assert!(actual.is_ok());
+        assert_eq!(actual.unwrap(), vec![]);
+    }
+
+    #[test]
+    fn test_parse_integer() {
+        let mut input = "42".as_bytes();
+        let actual = read_lisp(&mut input);
+        assert!(actual.is_ok());
+        assert_eq!(actual.unwrap(), vec![Integer { value: 42 }]);
+    }
+
+    #[test]
+    fn test_parse_symbol() {
+        let mut input = "  foobar  ".as_bytes();
+        let actual = read_lisp(&mut input);
+        assert!(actual.is_ok());
+        assert_eq!(actual.unwrap(), vec![Symbol { value: "foobar".to_string() }]);
+    }
+
+    #[test]
+    fn test_parse_float() {
+        let mut input = "  3.14159  ".as_bytes();
+        let actual = read_lisp(&mut input);
+        assert!(actual.is_ok());
+        assert_eq!(actual.unwrap(), vec![Float { value: 3.14159 }]);
     }
 }
