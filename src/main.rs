@@ -4,11 +4,9 @@ use clap::{Parser, Subcommand};
 use clap_verbosity_flag::Verbosity;
 use env_logger;
 use human_panic::setup_panic;
-
-mod error;
-
-use error::Result;
 use serde::Serialize;
+
+use lisp::error::Result;
 
 // TODO: parse a rational number (`2/3`)
 // TODO: parse a string (`"string with spaces"`)
