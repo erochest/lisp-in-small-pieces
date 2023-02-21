@@ -1,12 +1,12 @@
-use std::{path::PathBuf, fs::File, io::Read};
+use std::{path::PathBuf, fs::File};
 
 use clap::{Parser, Subcommand};
 use clap_verbosity_flag::Verbosity;
 use env_logger;
 use human_panic::setup_panic;
-use serde::Serialize;
 
 use lisp::error::Result;
+use lisp::reader::read_lisp;
 
 // TODO: parse a rational number (`2/3`)
 // TODO: parse a string (`"string with spaces"`)
@@ -29,7 +29,7 @@ fn main() -> Result<()> {
     match args.command {
         Command::Parse { input } => {
             let mut reader = File::open(input)?;
-            let tokens = parse(&mut reader)?;
+            let tokens = read_lisp(&mut reader)?;
             for token in tokens {
                 println!("{}", serde_json::to_string(&token)?);
             }
@@ -37,36 +37,6 @@ fn main() -> Result<()> {
     };
 
     Ok(())
-}
-
-#[derive(Debug, Serialize)]
-#[serde(tag = "type")]
-enum Token {
-    Integer {
-        value: isize,
-    },
-    Float {
-        value: f64,
-    },
-    Symbol {
-        value: String,
-    },
-}
-
-fn parse<R: Read>(reader: &mut R) -> Result<Vec<Token>> {
-    let mut buffer = String::new();
-    reader.read_to_string(&mut buffer)?;
-    let buffer = buffer.trim();
-
-    if let Ok(value) = buffer.parse() {
-        Ok(vec![Token::Integer { value }])
-    } else if let Ok(value) = buffer.parse() {
-        Ok(vec![Token::Float { value }])
-    } else if buffer.len() > 0 {
-        Ok(vec![Token::Symbol { value: buffer.to_string() }])
-    } else {
-        Ok(vec![])
-    }
 }
 
 /// A small lisp implementation.
