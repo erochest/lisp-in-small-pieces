@@ -1,6 +1,6 @@
 use assert_cmd::prelude::*;
 
-use std::process::Command;
+use std::{process::Command, path::Path};
 
 #[test]
 fn test_main() {
@@ -12,77 +12,49 @@ fn test_main() {
         .success();
 }
 
-#[test]
-fn test_empty_file() {
+fn test_parse_file<P: AsRef<Path>, S: AsRef<str>>(input: P, expected: S) {
     let assert = Command::cargo_bin(env!("CARGO_PKG_NAME"))
         .unwrap()
         .args(&[
             "parse".to_string(),
             "--input".to_string(),
-            "tests/data/empty.lisp".to_string(),
+            input.as_ref().to_string_lossy().to_string(),
         ])
         .assert()
         .success();
     let output = assert.get_output();
-    assert!(String::from_utf8(output.stdout.clone()).unwrap() == "".to_string());
+    let actual = String::from_utf8(output.stdout.clone())
+        .unwrap()
+        .trim()
+        .to_string();
+    assert!(actual == expected.as_ref().to_string());
+}
+
+#[test]
+fn test_empty_file() {
+    test_parse_file("tests/data/empty.lisp", "");
 }
 
 #[test]
 fn test_parse_integer() {
-    let assert = Command::cargo_bin(env!("CARGO_PKG_NAME"))
-        .unwrap()
-        .args(&[
-            "parse".to_string(),
-            "--input".to_string(),
-            "tests/data/integer.lisp".to_string(),
-        ])
-        .assert()
-        .success();
-    let output = assert.get_output();
-    let actual = String::from_utf8(output.stdout.clone())
-        .unwrap()
-        .trim()
-        .to_string();
-    let expected = "{\"type\":\"Integer\",\"value\":42}".to_string();
-    assert!(actual == expected);
+    test_parse_file(
+        "tests/data/integer.lisp",
+        "{\"type\":\"Integer\",\"value\":42}",
+    );
 }
 
 #[test]
 fn test_parse_symbol() {
-    let assert = Command::cargo_bin(env!("CARGO_PKG_NAME"))
-        .unwrap()
-        .args(&[
-            "parse".to_string(),
-            "--input".to_string(),
-            "tests/data/symbol.lisp".to_string(),
-        ])
-        .assert()
-        .success();
-    let output = assert.get_output();
-    let actual = String::from_utf8(output.stdout.clone())
-        .unwrap()
-        .trim()
-        .to_string();
-    let expected = "{\"type\":\"Symbol\",\"value\":\"foobar\"}".to_string();
-    assert!(actual == expected);
+    test_parse_file(
+        "tests/data/symbol.lisp",
+        "{\"type\":\"Symbol\",\"value\":\"foobar\"}",
+    );
 }
 
 #[test]
 fn test_parse_float() {
-    let assert = Command::cargo_bin(env!("CARGO_PKG_NAME"))
-        .unwrap()
-        .args(&[
-            "parse".to_string(),
-            "--input".to_string(),
-            "tests/data/float.lisp".to_string(),
-        ])
-        .assert()
-        .success();
-    let output = assert.get_output();
-    let actual = String::from_utf8(output.stdout.clone())
-        .unwrap()
-        .trim()
-        .to_string();
-    let expected = "{\"type\":\"Float\",\"value\":3.14159}".to_string();
-    assert!(actual == expected);
+    test_parse_file(
+        "tests/data/float.lisp",
+        "{\"type\":\"Float\",\"value\":3.14159}",
+    );
 }
