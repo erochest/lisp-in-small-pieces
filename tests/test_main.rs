@@ -66,3 +66,23 @@ fn test_parse_symbol() {
     let expected = "{\"type\":\"Symbol\",\"value\":\"foobar\"}".to_string();
     assert!(actual == expected);
 }
+
+#[test]
+fn test_parse_float() {
+    let assert = Command::cargo_bin(env!("CARGO_PKG_NAME"))
+        .unwrap()
+        .args(&[
+            "parse".to_string(),
+            "--input".to_string(),
+            "tests/data/float.lisp".to_string(),
+        ])
+        .assert()
+        .success();
+    let output = assert.get_output();
+    let actual = String::from_utf8(output.stdout.clone())
+        .unwrap()
+        .trim()
+        .to_string();
+    let expected = "{\"type\":\"Float\",\"value\":3.14159}".to_string();
+    assert!(actual == expected);
+}

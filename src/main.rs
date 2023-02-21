@@ -10,7 +10,6 @@ mod error;
 use error::Result;
 use serde::Serialize;
 
-// TODO: parse a float (`3.14159`)
 // TODO: parse a rational number (`2/3`)
 // TODO: parse a string (`"string with spaces"`)
 // TODO: parse nil (`nil`)
@@ -48,6 +47,9 @@ enum Token {
     Integer {
         value: isize,
     },
+    Float {
+        value: f64,
+    },
     Symbol {
         value: String,
     },
@@ -60,6 +62,8 @@ fn parse<R: Read>(reader: &mut R) -> Result<Vec<Token>> {
 
     if let Ok(value) = buffer.parse() {
         Ok(vec![Token::Integer { value }])
+    } else if let Ok(value) = buffer.parse() {
+        Ok(vec![Token::Float { value }])
     } else if buffer.len() > 0 {
         Ok(vec![Token::Symbol { value: buffer.to_string() }])
     } else {
