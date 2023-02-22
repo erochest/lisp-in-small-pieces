@@ -6,7 +6,6 @@ use serde::Serialize;
 
 use crate::error::Result;
 
-// TODO: parse nil (`nil`)
 // TODO: parse an empty list (`()`)
 // TODO: parse a dotted-cons cell (`(42 . 43)`)
 // TODO: parse a cons list (`(42 43 44)`)
@@ -34,6 +33,7 @@ pub enum Token {
     Symbol {
         value: String,
     },
+    Nil,
 }
 
 pub fn read_lisp<R: Read>(reader: &mut R) -> Result<Vec<Token>> {
@@ -46,7 +46,9 @@ pub fn read_lisp<R: Read>(reader: &mut R) -> Result<Vec<Token>> {
     reader.read_to_string(&mut buffer)?;
     let buffer = buffer.trim();
 
-    if let Ok(value) = buffer.parse() {
+    if buffer == "nil" {
+        Ok(vec![Token::Nil])
+    } else if let Ok(value) = buffer.parse() {
         Ok(vec![Token::Integer { value }])
     } else if let Ok(value) = buffer.parse() {
         Ok(vec![Token::Float { value }])
@@ -98,5 +100,6 @@ mod tests {
     test_parse_token!(parse_rational, " 2/3 ", Rational { numerator: 2, denominator: 3 });
     test_parse_token!(parse_empty_string, "\"\"", String { value: "".to_string() });
     test_parse_token!(parse_string, " \"Hello, world!\" ", String { value: "Hello, world!".to_string() });
+    test_parse_token!(parse_nil, "  nil ", Nil);
 
 }
