@@ -6,7 +6,6 @@ use serde::Serialize;
 
 use crate::error::Result;
 
-// TODO: parse a string (`"string with spaces"`)
 // TODO: parse nil (`nil`)
 // TODO: parse an empty list (`()`)
 // TODO: parse a dotted-cons cell (`(42 . 43)`)
@@ -29,6 +28,9 @@ pub enum Token {
         numerator: isize,
         denominator: isize,
     },
+    String {
+        value: String,
+    },
     Symbol {
         value: String,
     },
@@ -37,6 +39,7 @@ pub enum Token {
 pub fn read_lisp<R: Read>(reader: &mut R) -> Result<Vec<Token>> {
     lazy_static! {
         static ref RE_RATIONAL: Regex = Regex::new(r"([+-]?\d+)/(\d+)").unwrap();
+        static ref RE_STRING: Regex = Regex::new("\"((\\\\\")|[^\"]*)\"").unwrap();
     }
 
     let mut buffer = String::new();
@@ -51,6 +54,9 @@ pub fn read_lisp<R: Read>(reader: &mut R) -> Result<Vec<Token>> {
         let numerator = captures[1].parse().unwrap();
         let denominator = captures[2].parse().unwrap();
         Ok(vec![Token::Rational { numerator, denominator }])
+    } else if let Some(captures) = RE_STRING.find(&buffer) {
+        let value = captures.as_str()[1..(captures.end()-1)].to_string();
+        Ok(vec![Token::String { value }])
     } else if buffer.len() > 0 {
         Ok(vec![Token::Symbol { value: buffer.to_string() }])
     } else {
@@ -90,5 +96,7 @@ mod tests {
     test_parse_token!(parse_symbol, "foobar", Symbol { value: "foobar".to_string() });
     test_parse_token!(parse_float, "   3.14159   ", Float { value: 3.14159 });
     test_parse_token!(parse_rational, " 2/3 ", Rational { numerator: 2, denominator: 3 });
+    test_parse_token!(parse_empty_string, "\"\"", String { value: "".to_string() });
+    test_parse_token!(parse_string, " \"Hello, world!\" ", String { value: "Hello, world!".to_string() });
 
 }
