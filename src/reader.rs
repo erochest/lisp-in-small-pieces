@@ -74,32 +74,25 @@ mod tests {
 
     use Token::*;
 
-    #[test]
-    fn test_empty_input() {
-        let mut input = "".as_bytes();
-        let actual = read_lisp(&mut input);
-        assert!(actual.is_ok());
-        assert_eq!(actual.unwrap(), vec![]);
-    }
-
-    macro_rules! test_parse_token {
-        ($name:ident, $input:expr, $token:expr) => {
+    macro_rules! test_parse_input {
+        ($name:ident, $input:expr, $( $token:expr ),*) => {
             #[test]
             fn $name() {
                 let mut input = $input.as_bytes();
                 let actual = read_lisp(&mut input);
                 assert!(actual.is_ok());
-                assert_eq!(actual.unwrap(), vec![$token]);
+                assert_eq!(actual.unwrap(), vec![$( $token, )*]);
             }
         };
     }
 
-    test_parse_token!(parse_integer, "42", Integer { value: 42 });
-    test_parse_token!(parse_symbol, "foobar", Symbol { value: "foobar".to_string() });
-    test_parse_token!(parse_float, "   3.14159   ", Float { value: 3.14159 });
-    test_parse_token!(parse_rational, " 2/3 ", Rational { numerator: 2, denominator: 3 });
-    test_parse_token!(parse_empty_string, "\"\"", String { value: "".to_string() });
-    test_parse_token!(parse_string, " \"Hello, world!\" ", String { value: "Hello, world!".to_string() });
-    test_parse_token!(parse_nil, "  nil ", Nil);
+    test_parse_input!(parse_empty, "", );
+    test_parse_input!(parse_integer, "42", Integer { value: 42 });
+    test_parse_input!(parse_symbol, "foobar", Symbol { value: "foobar".to_string() });
+    test_parse_input!(parse_float, "   3.14159   ", Float { value: 3.14159 });
+    test_parse_input!(parse_rational, " 2/3 ", Rational { numerator: 2, denominator: 3 });
+    test_parse_input!(parse_empty_string, "\"\"", String { value: "".to_string() });
+    test_parse_input!(parse_string, " \"Hello, world!\" ", String { value: "Hello, world!".to_string() });
+    test_parse_input!(parse_nil, "  nil ", Nil);
 
 }
