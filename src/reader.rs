@@ -1,10 +1,11 @@
 use std::io::Read;
 
+use lazy_static::lazy_static;
+use regex::Regex;
 use serde::Serialize;
 
 use crate::error::Result;
 
-// TODO: parse a rational number (`2/3`)
 // TODO: parse a string (`"string with spaces"`)
 // TODO: parse nil (`nil`)
 // TODO: parse an empty list (`()`)
@@ -24,12 +25,20 @@ pub enum Token {
     Float {
         value: f64,
     },
+    Rational {
+        numerator: isize,
+        denominator: isize,
+    },
     Symbol {
         value: String,
     },
 }
 
 pub fn read_lisp<R: Read>(reader: &mut R) -> Result<Vec<Token>> {
+    lazy_static! {
+        static ref RE_RATIONAL: Regex = Regex::new(r"([+-]?\d+)/(\d+)").unwrap();
+    }
+
     let mut buffer = String::new();
     reader.read_to_string(&mut buffer)?;
     let buffer = buffer.trim();
@@ -38,6 +47,10 @@ pub fn read_lisp<R: Read>(reader: &mut R) -> Result<Vec<Token>> {
         Ok(vec![Token::Integer { value }])
     } else if let Ok(value) = buffer.parse() {
         Ok(vec![Token::Float { value }])
+    } else if let Some(captures) = RE_RATIONAL.captures(&buffer) {
+        let numerator = captures[1].parse().unwrap();
+        let denominator = captures[2].parse().unwrap();
+        Ok(vec![Token::Rational { numerator, denominator }])
     } else if buffer.len() > 0 {
         Ok(vec![Token::Symbol { value: buffer.to_string() }])
     } else {
@@ -76,5 +89,6 @@ mod tests {
     test_parse_token!(parse_integer, "42", Integer { value: 42 });
     test_parse_token!(parse_symbol, "foobar", Symbol { value: "foobar".to_string() });
     test_parse_token!(parse_float, "   3.14159   ", Float { value: 3.14159 });
+    test_parse_token!(parse_rational, " 2/3 ", Rational { numerator: 2, denominator: 3 });
 
 }
