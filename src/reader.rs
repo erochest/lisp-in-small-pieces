@@ -6,6 +6,8 @@ use serde::Serialize;
 
 use crate::error::Result;
 
+mod scanner;
+
 // TODO: parse an empty list (`()`)
 // TODO: parse a dotted-cons cell (`(42 . 43)`)
 // TODO: parse a cons list (`(42 43 44)`)
