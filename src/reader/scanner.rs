@@ -65,7 +65,16 @@ mod tests {
         assert_eq!(ranges.len(), 1);
     }
 
-    // TODO: only whitespace
+    #[test]
+    fn test_only_whitespace() {
+        let mut input = "    ".as_bytes();
+
+        let result = scan(&mut input);
+        assert!(result.is_ok());
+
+        let tokens = result.unwrap().collect::<Vec<_>>();
+        assert!(tokens.is_empty());
+    }
 
     #[test]
     fn test_skips_initial_whitespace() {
