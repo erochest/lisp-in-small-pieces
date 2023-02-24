@@ -1,14 +1,21 @@
-use std::{io::{Read, read_to_string}, ops::Range};
+use std::{io::{Read, read_to_string}, ops::Range, marker::PhantomData, rc::Rc, slice::SliceIndex};
 
 use crate::error::Result;
 
-struct ScanRanges {
+#[derive(Debug, Clone)]
+struct Scanner {
     i: usize,
-    buffer: Vec<char>,
+    buffer: Rc<Vec<char>>,
 }
 
-impl Iterator for ScanRanges {
-    type Item = Range<usize>;
+#[derive(Debug, Clone)]
+struct ScanToken {
+    range: Range<usize>,
+    buffer: Rc<Vec<char>>,
+}
+
+impl Iterator for Scanner {
+    type Item = ScanToken;
 
     fn next(&mut self) -> Option<Self::Item> {
 
@@ -23,13 +30,23 @@ impl Iterator for ScanRanges {
         let start = self.i;
         self.i = self.buffer.len();
 
-        Some(start..self.buffer.len())
+        Some(ScanToken {
+            range: start..self.buffer.len(),
+            buffer: Rc::clone(&self.buffer),
+        })
     }
 }
 
-fn scan<R: Read>(reader: R) -> Result<ScanRanges> {
+impl ScanToken {
+    fn get_string(&self) -> Option<String> {
+        self.buffer.get(self.range.clone()).map(|cs| cs.iter().collect())
+    }
+}
+
+fn scan<'a, R: Read>(reader: R) -> Result<Scanner> {
     let buffer = read_to_string(reader)?.chars().collect::<Vec<_>>();
-    Ok(ScanRanges {
+    let buffer = Rc::new(buffer);
+    Ok(Scanner {
         i: 0,
         buffer,
     })
@@ -37,11 +54,19 @@ fn scan<R: Read>(reader: R) -> Result<ScanRanges> {
 
 #[cfg(test)]
 mod tests {
+    use std::rc::Rc;
+
     use pretty_assertions::assert_eq;
 
-    use crate::reader::scanner::ScanRanges;
+    use crate::reader::scanner::Scanner;
 
-    use super::scan;
+    use super::{scan, ScanToken};
+
+    #[test]
+    fn test_get_string() {
+        let token = ScanToken { range: 4..10, buffer: Rc::new("    foobar".chars().collect()) };
+        assert_eq!(token.get_string(), Some("foobar".to_string()));
+    }
 
     #[test]
     fn test_scans_empty() {
@@ -83,12 +108,11 @@ mod tests {
         let result = scan(&mut input);
         assert!(result.is_ok());
 
-        let scanner: ScanRanges = result.unwrap();
-        let buffer = scanner.buffer.clone();
-        let ranges = scanner.collect::<Vec<_>>();
-        assert_eq!(ranges.len(), 1);
+        let scanner: Scanner = result.unwrap();
+        let tokens = scanner.collect::<Vec<_>>();
+        assert_eq!(tokens.len(), 1);
 
-        let token = buffer.get(ranges[0].clone()).map(|cs| cs.iter().collect::<String>());
+        let token = tokens[0].get_string();
         assert_eq!(token, Some("foobar".to_string()));
     }
 }
