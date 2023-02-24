@@ -19,7 +19,10 @@ impl Iterator for Scanner {
 
     fn next(&mut self) -> Option<Self::Item> {
 
-        while self.buffer.get(self.i).map_or(false, |c| c.is_whitespace()) {
+        while let Some(c) = self.buffer.get(self.i) {
+            if !c.is_whitespace() {
+                break;
+            }
             self.i += 1;
         }
 
