@@ -18,7 +18,7 @@ impl Iterator for Scanner {
     type Item = ScanToken;
 
     fn next(&mut self) -> Option<Self::Item> {
-
+        // TODO: refactor this
         while let Some(c) = self.buffer.get(self.i) {
             if !c.is_whitespace() {
                 break;
@@ -181,4 +181,20 @@ mod tests {
         let token = tokens[0].get_string();
         assert_eq!(token, Some("\"\"".to_string()));
     }
+
+    #[test]
+    fn test_scans_strings_with_escapes() {
+        let mut input = " \"this string \\\"contains\\\" a string\" ".as_bytes();
+
+        let result = scan(&mut input);
+        assert!(result.is_ok());
+
+        let scanner = result.unwrap();
+        let tokens: Vec<_> = scanner.collect();
+        assert_eq!(tokens.len(), 1);
+
+        let token = tokens[0].get_string();
+        assert_eq!(token, Some("\"this string \\\"contains\\\" a string\"".to_string()));
+    }
+
 }
