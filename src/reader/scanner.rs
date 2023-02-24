@@ -23,19 +23,22 @@ impl Scanner {
         let buffer = Rc::new(buffer.as_ref().chars().collect());
         Scanner { i: 0, buffer }
     }
+
+    fn skip_whitespace(&mut self) {
+        while let Some(c) = self.buffer.get(self.i) {
+            if !c.is_whitespace() {
+                return;
+            }
+            self.i += 1;
+        }
+    }
 }
 
 impl Iterator for Scanner {
     type Item = ScanToken;
 
     fn next(&mut self) -> Option<Self::Item> {
-        // TODO: refactor this
-        while let Some(c) = self.buffer.get(self.i) {
-            if !c.is_whitespace() {
-                break;
-            }
-            self.i += 1;
-        }
+        self.skip_whitespace();
 
         if self.i >= self.buffer.len() {
             return None
