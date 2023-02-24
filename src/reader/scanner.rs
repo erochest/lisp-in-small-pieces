@@ -14,6 +14,17 @@ struct ScanToken {
     buffer: Rc<Vec<char>>,
 }
 
+impl Scanner {
+    fn new(buffer: Vec<char>) -> Self {
+        Scanner { i: 0, buffer: Rc::new(buffer) }
+    }
+
+    fn from_str<S: AsRef<str>>(buffer: S) -> Self {
+        let buffer = Rc::new(buffer.as_ref().chars().collect());
+        Scanner { i: 0, buffer }
+    }
+}
+
 impl Iterator for Scanner {
     type Item = ScanToken;
 
@@ -69,12 +80,8 @@ impl ScanToken {
 }
 
 fn scan<'a, R: Read>(reader: R) -> Result<Scanner> {
-    let buffer = read_to_string(reader)?.chars().collect::<Vec<_>>();
-    let buffer = Rc::new(buffer);
-    Ok(Scanner {
-        i: 0,
-        buffer,
-    })
+    let input = read_to_string(reader)?;
+    Ok(Scanner::from_str(&input))
 }
 
 #[cfg(test)]
