@@ -161,10 +161,24 @@ mod tests {
 
         let scanner = result.unwrap();
         let tokens: Vec<_> = scanner.collect();
-        println!(">>> {:?}", tokens.iter().map(|t| t.get_string()).collect::<Vec<_>>());
         assert_eq!(tokens.len(), 1);
 
         let token = tokens[0].get_string();
         assert_eq!(token, Some("\"this is a string\"".to_string()));
+    }
+
+    #[test]
+    fn test_scans_empty_strings() {
+        let mut input = " \"\" ".as_bytes();
+
+        let result = scan(&mut input);
+        assert!(result.is_ok());
+
+        let scanner = result.unwrap();
+        let tokens: Vec<_> = scanner.collect();
+        assert_eq!(tokens.len(), 1);
+
+        let token = tokens[0].get_string();
+        assert_eq!(token, Some("\"\"".to_string()));
     }
 }
