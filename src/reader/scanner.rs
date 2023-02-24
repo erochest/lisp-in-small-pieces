@@ -27,8 +27,14 @@ impl Iterator for Scanner {
             return None
         }
 
+        // todo: scan over a string
         let start = self.i;
-        self.i = self.buffer.len();
+        while let Some(c) = self.buffer.get(self.i) {
+            if c.is_whitespace() {
+                break;
+            }
+            self.i += 1;
+        }
 
         Some(ScanToken {
             range: start..self.buffer.len(),
@@ -99,6 +105,17 @@ mod tests {
 
         let tokens = result.unwrap().collect::<Vec<_>>();
         assert!(tokens.is_empty());
+    }
+
+    #[test]
+    fn test_multiple_tokens() {
+        let mut input = "  one two three  ".as_bytes();
+
+        let result = scan(&mut input);
+        assert!(result.is_ok());
+
+        let tokens = result.unwrap().collect::<Vec<_>>();
+        assert_eq!(tokens.len(), 3);
     }
 
     #[test]
