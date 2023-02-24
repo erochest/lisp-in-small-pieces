@@ -33,6 +33,15 @@ impl Scanner {
         }
     }
 
+    fn skip_to_whitespace(&mut self) {
+        while let Some(c) = self.buffer.get(self.i) {
+            if c.is_whitespace() {
+                break;
+            }
+            self.i += 1;
+        }
+    }
+
     fn skip_string(&mut self) {
         assert!(self.buffer.get(self.i) == Some(&'"'));
 
@@ -70,12 +79,7 @@ impl Iterator for Scanner {
             if *peek == '"' {
                 self.skip_string();
             } else {
-                while let Some(c) = self.buffer.get(self.i) {
-                    if c.is_whitespace() {
-                        break;
-                    }
-                    self.i += 1;
-                }
+                self.skip_to_whitespace();
             }
         }
 
