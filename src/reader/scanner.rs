@@ -30,17 +30,33 @@ impl Iterator for Scanner {
             return None
         }
 
-        // todo: scan over a string
         let start = self.i;
-        while let Some(c) = self.buffer.get(self.i) {
-            if c.is_whitespace() {
-                break;
+        if let Some(peek) = self.buffer.get(self.i) {
+            if *peek == '"' {
+                self.i += 1;
+                while let Some(c) = self.buffer.get(self.i) {
+                    if *c == '"' {
+                        self.i += 1;
+                        break;
+                    }
+                    if *c == '\\' {
+                        self.i += 2;
+                    } else {
+                        self.i += 1;
+                    }
+                }
+            } else {
+                while let Some(c) = self.buffer.get(self.i) {
+                    if c.is_whitespace() {
+                        break;
+                    }
+                    self.i += 1;
+                }
             }
-            self.i += 1;
         }
 
         Some(ScanToken {
-            range: start..self.buffer.len(),
+            range: start..self.i,
             buffer: Rc::clone(&self.buffer),
         })
     }
@@ -134,5 +150,21 @@ mod tests {
 
         let token = tokens[0].get_string();
         assert_eq!(token, Some("foobar".to_string()));
+    }
+
+    #[test]
+    fn test_scans_strings() {
+        let mut input = " \"this is a string\" ".as_bytes();
+
+        let result = scan(&mut input);
+        assert!(result.is_ok());
+
+        let scanner = result.unwrap();
+        let tokens: Vec<_> = scanner.collect();
+        println!(">>> {:?}", tokens.iter().map(|t| t.get_string()).collect::<Vec<_>>());
+        assert_eq!(tokens.len(), 1);
+
+        let token = tokens[0].get_string();
+        assert_eq!(token, Some("\"this is a string\"".to_string()));
     }
 }
