@@ -55,6 +55,8 @@ impl FromStr for Token {
             let numerator = captures[1].parse()?;
             let denominator = captures[2].parse()?;
             Ok(Token::Rational { numerator, denominator })
+        } else if s == "\"\"" {
+            Ok(Token::String { value: String::new() })
         } else if s.len() > 0 {
             Ok(Token::Symbol { value: s.to_string() })
         } else {
@@ -144,6 +146,7 @@ mod tests {
     test_from_str_input!(from_str_symbol, "foobar", Symbol { value: "foobar".to_string() });
     test_from_str_input!(from_str_float, "3.14159", Float { value: 3.14159 });
     test_from_str_input!(from_str_rational, "2/3", Rational { numerator: 2, denominator: 3 });
+    test_from_str_input!(from_str_empty_string, "\"\"", String { value: "".to_string() });
 
     macro_rules! test_parse_input {
         ($name:ident, $input:expr, $( $token:expr ),*) => {
