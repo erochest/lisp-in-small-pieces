@@ -31,6 +31,7 @@ pub enum Token {
     },
     ListStart,
     ListEnd,
+    EmptyList,
     Nil,
 }
 
@@ -76,14 +77,40 @@ impl FromStr for Token {
     }
 }
 
+fn is_list_end(opt: Option<&Result<Token>>) -> bool {
+    if let Some(r) = opt {
+        if let Ok(t) = r {
+            return *t == Token::ListEnd
+        }
+    } 
+    false
+}
+
 pub fn read_lisp<R: Read>(reader: &mut R) -> Result<Vec<Token>> {
-    scan(reader)?
+    let mut tokens = scan(reader)?
         .map(|s| {
             s.get_string()
                 .ok_or_else(|| Error::TokenParseError(String::new()))
                 .and_then(|s| Token::from_str(&s))
         })
-        .collect()
+        .peekable();
+    let mut buffer = Vec::new();
+
+    loop {
+        if let Some(token) = tokens.next() {
+            let token = token?;
+            if token == Token::ListStart && is_list_end(tokens.peek()) {
+                tokens.next();
+                buffer.push(Token::EmptyList);
+            } else {
+                buffer.push(token);
+            }
+        } else {
+            break;
+        }
+    }
+
+    Ok(buffer)
 }
 
 #[cfg(test)]
@@ -184,9 +211,8 @@ mod tests {
         Integer { value: 13 },
         Integer { value: 99 }
     );
-    test_parse_input!(parse_empty_cons, "()", ListStart, ListEnd);
+    test_parse_input!(parse_empty_cons, "()", EmptyList);
 
-// TODO: parse an empty list (`()`)
 // TODO: parse a dotted-cons cell (`(42 . 43)`)
 // TODO: parse a cons list (`(42 43 44)`)
 // TODO: parse a quoted symbol (`'foobar`)
