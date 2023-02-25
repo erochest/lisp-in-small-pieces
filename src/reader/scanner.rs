@@ -166,66 +166,39 @@ mod tests {
         assert_eq!(tokens.len(), 3);
     }
 
-    #[test]
-    fn test_skips_initial_whitespace() {
-        let mut input = "    foobar".as_bytes();
+    macro_rules! test_scan {
+        ($name:ident, $input:expr, $n:expr, $( $token:expr ),*) => {
+            #[test]
+            fn $name() {
+                let mut input = $input.as_bytes();
 
-        let result = scan(&mut input);
-        assert!(result.is_ok());
+                let actual = scan(&mut input);
+                assert!(actual.is_ok());
 
-        let scanner: Scanner = result.unwrap();
-        let tokens = scanner.collect::<Vec<_>>();
-        assert_eq!(tokens.len(), 1);
+                let scanner: Scanner = actual.unwrap();
+                let tokens = scanner
+                    .filter_map(|t| t.get_string())
+                    .collect::<Vec<_>>();
+                assert_eq!(tokens.len(), $n);
 
-        let token = tokens[0].get_string();
-        assert_eq!(token, Some("foobar".to_string()));
+                assert_eq!(tokens, vec![$( $token, )*]);
+            }
+        };
     }
 
-    #[test]
-    fn test_scans_strings() {
-        let mut input = " \"this is a string\" ".as_bytes();
+    // #[test]
+    // fn test_list_start() {
+    // }
 
-        let result = scan(&mut input);
-        assert!(result.is_ok());
+    // test_list_end
+    // test_empty_list
+    // test_integer_list_end
+    // test_symbol_list_end
+    // test_symbol_list_end_list_end
 
-        let scanner = result.unwrap();
-        let tokens: Vec<_> = scanner.collect();
-        assert_eq!(tokens.len(), 1);
+    test_scan!(test_skips_initial_whitespace, "    foobar", 1, "foobar".to_string());
+    test_scan!(test_scans_strings, " \"this is a string\" ", 1, "\"this is a string\"".to_string());
+    test_scan!(test_scans_empty_strings, " \"\" ", 1, "\"\"".to_string());
+    test_scan!(test_scans_strings_with_escapes, " \"this string \\\"contains\\\" a string\" ", 1, "\"this string \\\"contains\\\" a string\"".to_string());
 
-        let token = tokens[0].get_string();
-        assert_eq!(token, Some("\"this is a string\"".to_string()));
-    }
-
-    #[test]
-    fn test_scans_empty_strings() {
-        let mut input = " \"\" ".as_bytes();
-
-        let result = scan(&mut input);
-        assert!(result.is_ok());
-
-        let scanner = result.unwrap();
-        let tokens: Vec<_> = scanner.collect();
-        assert_eq!(tokens.len(), 1);
-
-        let token = tokens[0].get_string();
-        assert_eq!(token, Some("\"\"".to_string()));
-    }
-
-    #[test]
-    fn test_scans_strings_with_escapes() {
-        let mut input = " \"this string \\\"contains\\\" a string\" ".as_bytes();
-
-        let result = scan(&mut input);
-        assert!(result.is_ok());
-
-        let scanner = result.unwrap();
-        let tokens: Vec<_> = scanner.collect();
-        assert_eq!(tokens.len(), 1);
-
-        let token = tokens[0].get_string();
-        assert_eq!(
-            token,
-            Some("\"this string \\\"contains\\\" a string\"".to_string())
-        );
-    }
 }
