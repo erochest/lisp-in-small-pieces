@@ -8,6 +8,8 @@ use crate::error::{Result, Error};
 
 mod scanner;
 
+use crate::reader::scanner::scan;
+
 // TODO: parse an empty list (`()`)
 // TODO: parse a dotted-cons cell (`(42 . 43)`)
 // TODO: parse a cons list (`(42 43 44)`)
@@ -72,46 +74,9 @@ impl FromStr for Token {
 }
 
 pub fn read_lisp<R: Read>(reader: &mut R) -> Result<Vec<Token>> {
-    lazy_static! {
-        static ref RE_RATIONAL: Regex = Regex::new(r"([+-]?\d+)/(\d+)").unwrap();
-        static ref RE_STRING: Regex = Regex::new("\"((\\\\\")|[^\"]*)\"").unwrap();
-    }
-
-    let mut buffer = String::new();
-    reader.read_to_string(&mut buffer)?;
-    buffer = buffer.trim().to_string();
-
-    // let mut tokens = Vec::new();
-    // let mut i = 0;
-    // let mut current = String::new();
-
-    // for c in buffer.chars() {
-    //     if c.is_whitespace() {
-    //         continue;
-    //     }
-
-    // }
-
-    // return Ok(tokens);
-
-    if buffer == "nil" {
-        Ok(vec![Token::Nil])
-    } else if let Ok(value) = buffer.parse() {
-        Ok(vec![Token::Integer { value }])
-    } else if let Ok(value) = buffer.parse() {
-        Ok(vec![Token::Float { value }])
-    } else if let Some(captures) = RE_RATIONAL.captures(&buffer) {
-        let numerator = captures[1].parse().unwrap();
-        let denominator = captures[2].parse().unwrap();
-        Ok(vec![Token::Rational { numerator, denominator }])
-    } else if let Some(captures) = RE_STRING.find(&buffer) {
-        let value = captures.as_str()[1..(captures.end()-1)].to_string();
-        Ok(vec![Token::String { value }])
-    } else if buffer.len() > 0 {
-        Ok(vec![Token::Symbol { value: buffer.to_string() }])
-    } else {
-        Ok(vec![])
-    }
+    scan(reader)?
+    .map(|s| s.get_string().ok_or_else(|| Error::TokenParseError(String::new())).and_then(|s| Token::from_str(&s)))
+    .collect()
 }
 
 #[cfg(test)]

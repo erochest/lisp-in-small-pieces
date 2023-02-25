@@ -3,23 +3,23 @@ use std::{io::{Read, read_to_string}, ops::Range, marker::PhantomData, rc::Rc, s
 use crate::error::Result;
 
 #[derive(Debug, Clone)]
-struct Scanner {
+pub struct Scanner {
     i: usize,
     buffer: Rc<Vec<char>>,
 }
 
 #[derive(Debug, Clone)]
-struct ScanToken {
+pub struct ScanToken {
     range: Range<usize>,
     buffer: Rc<Vec<char>>,
 }
 
 impl Scanner {
-    fn new(buffer: Vec<char>) -> Self {
+    pub fn new(buffer: Vec<char>) -> Self {
         Scanner { i: 0, buffer: Rc::new(buffer) }
     }
 
-    fn from_str<S: AsRef<str>>(buffer: S) -> Self {
+    pub fn from_str<S: AsRef<str>>(buffer: S) -> Self {
         let buffer = Rc::new(buffer.as_ref().chars().collect());
         Scanner { i: 0, buffer }
     }
@@ -91,12 +91,12 @@ impl Iterator for Scanner {
 }
 
 impl ScanToken {
-    fn get_string(&self) -> Option<String> {
+    pub fn get_string(&self) -> Option<String> {
         self.buffer.get(self.range.clone()).map(|cs| cs.iter().collect())
     }
 }
 
-fn scan<'a, R: Read>(reader: R) -> Result<Scanner> {
+pub fn scan<'a, R: Read>(reader: R) -> Result<Scanner> {
     let input = read_to_string(reader)?;
     Ok(Scanner::from_str(&input))
 }
