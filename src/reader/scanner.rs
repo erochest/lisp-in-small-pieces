@@ -76,7 +76,9 @@ impl Iterator for Scanner {
 
         let start = self.i;
         if let Some(peek) = self.buffer.get(self.i) {
-            if *peek == '"' {
+            if *peek == '(' {
+                self.i += 1;
+            } else if *peek == '"' {
                 self.skip_string();
             } else {
                 self.skip_to_whitespace();
@@ -186,19 +188,19 @@ mod tests {
         };
     }
 
-    // #[test]
-    // fn test_list_start() {
-    // }
-
-    // test_list_end
-    // test_empty_list
-    // test_integer_list_end
-    // test_symbol_list_end
-    // test_symbol_list_end_list_end
-
     test_scan!(test_skips_initial_whitespace, "    foobar", 1, "foobar".to_string());
     test_scan!(test_scans_strings, " \"this is a string\" ", 1, "\"this is a string\"".to_string());
     test_scan!(test_scans_empty_strings, " \"\" ", 1, "\"\"".to_string());
     test_scan!(test_scans_strings_with_escapes, " \"this string \\\"contains\\\" a string\" ", 1, "\"this string \\\"contains\\\" a string\"".to_string());
+
+    test_scan!(test_list_start, " ( ", 1, "(".to_string());
+    test_scan!(test_list_end, " ) ", 1, ")".to_string());
+    test_scan!(test_empty_list, " () ", 2, "(".to_string(), ")".to_string());
+
+    // test_empty_list
+    // test_integer_list_end
+    // test_symbol_list_end
+    // test_symbol_list_end_list_end
+    // test_list_symbol
 
 }
