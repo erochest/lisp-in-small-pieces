@@ -134,6 +134,6 @@ mod tests {
         };
     }
 
-    // test_parse_input!(parse_sequence, "42 13 99", Integer { value: 42 }, Integer { value: 13 }, Integer { value: 99 });
+    test_parse_input!(parse_sequence, "42 13 99", Integer { value: 42 }, Integer { value: 13 }, Integer { value: 99 });
 
 }
