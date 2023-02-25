@@ -48,7 +48,9 @@ impl FromStr for Token {
             static ref RE_ESCAPE: Regex = Regex::new(r"\\(.)").unwrap();
         }
 
-        if let Ok(value) = s.parse() {
+        if s == "nil" {
+            Ok(Token::Nil)
+        } else if let Ok(value) = s.parse() {
             Ok(Token::Integer { value })
         } else if let Ok(value) = s.parse() {
             Ok(Token::Float { value })
@@ -153,6 +155,7 @@ mod tests {
     test_from_str_input!(from_str_empty_string, "\"\"", String { value: "".to_string() });
     test_from_str_input!(from_str_string, "\"Hello, World!\"", String { value: "Hello, World!".to_string() });
     test_from_str_input!(from_str_string_escaped, "\"Hello, \\\"World!\\\"\"", String { value: "Hello, \"World!\"".to_string() });
+    test_from_str_input!(from_str_nil, "nil", Nil);
 
     macro_rules! test_parse_input {
         ($name:ident, $input:expr, $( $token:expr ),*) => {
