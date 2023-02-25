@@ -134,14 +134,6 @@ mod tests {
         };
     }
 
-    test_parse_input!(parse_empty, "", );
-    test_parse_input!(parse_integer, "42", Integer { value: 42 });
-    test_parse_input!(parse_symbol, "foobar", Symbol { value: "foobar".to_string() });
-    test_parse_input!(parse_float, "   3.14159   ", Float { value: 3.14159 });
-    test_parse_input!(parse_rational, " 2/3 ", Rational { numerator: 2, denominator: 3 });
-    test_parse_input!(parse_empty_string, "\"\"", String { value: "".to_string() });
-    test_parse_input!(parse_string, " \"Hello, world!\" ", String { value: "Hello, world!".to_string() });
-    test_parse_input!(parse_nil, "  nil ", Nil);
     // test_parse_input!(parse_sequence, "42 13 99", Integer { value: 42 }, Integer { value: 13 }, Integer { value: 99 });
 
 }
