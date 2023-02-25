@@ -33,9 +33,9 @@ impl Scanner {
         }
     }
 
-    fn skip_to_whitespace(&mut self) {
+    fn skip_to_end(&mut self) {
         while let Some(c) = self.buffer.get(self.i) {
-            if c.is_whitespace() {
+            if c.is_whitespace() || *c == ')' {
                 break;
             }
             self.i += 1;
@@ -78,10 +78,12 @@ impl Iterator for Scanner {
         if let Some(peek) = self.buffer.get(self.i) {
             if *peek == '(' {
                 self.i += 1;
+            } else if *peek == ')' {
+                self.i += 1;
             } else if *peek == '"' {
                 self.skip_string();
             } else {
-                self.skip_to_whitespace();
+                self.skip_to_end();
             }
         }
 
@@ -196,10 +198,7 @@ mod tests {
     test_scan!(test_list_start, " ( ", 1, "(".to_string());
     test_scan!(test_list_end, " ) ", 1, ")".to_string());
     test_scan!(test_empty_list, " () ", 2, "(".to_string(), ")".to_string());
-
-    // test_empty_list
-    // test_integer_list_end
-    // test_symbol_list_end
+    test_scan!(test_integer_list_end, " 42) ", 2, "42".to_string(), ")".to_string());
     // test_symbol_list_end_list_end
     // test_list_symbol
 
