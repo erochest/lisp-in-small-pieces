@@ -162,6 +162,8 @@ mod tests {
         }
     );
     test_from_str_input!(from_str_nil, "nil", Nil);
+    test_from_str_input!(from_str_list_start, "(", ListStart);
+    test_from_str_input!(from_str_list_end, ")", ListEnd);
 
     macro_rules! test_parse_input {
         ($name:ident, $input:expr, $( $token:expr ),*) => {
