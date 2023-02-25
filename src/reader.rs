@@ -10,14 +10,6 @@ mod scanner;
 
 use crate::reader::scanner::scan;
 
-// TODO: parse an empty list (`()`)
-// TODO: parse a dotted-cons cell (`(42 . 43)`)
-// TODO: parse a cons list (`(42 43 44)`)
-// TODO: parse a quoted symbol (`'foobar`)
-// TODO: parse a quoted list (`'(+ 1 3)`)
-// TODO: parse a quoted function name (`#'foobar`)
-// TODO: parse comments
-
 #[derive(Debug, Serialize, PartialEq)]
 #[serde(tag = "type")]
 pub enum Token {
@@ -191,4 +183,12 @@ mod tests {
         Integer { value: 99 }
     );
     test_parse_input!(parse_empty_cons, "()", ListStart, ListEnd);
+
+// TODO: parse an empty list (`()`)
+// TODO: parse a dotted-cons cell (`(42 . 43)`)
+// TODO: parse a cons list (`(42 43 44)`)
+// TODO: parse a quoted symbol (`'foobar`)
+// TODO: parse a quoted list (`'(+ 1 3)`)
+// TODO: parse a quoted function name (`#'foobar`)
+// TODO: parse comments
 }
