@@ -117,21 +117,20 @@ mod tests {
         });
     }
 
-    #[test]
-    fn from_str_integer() {
-        let input = "42";
-        let actual = Token::from_str(input);
-        assert!(actual.is_ok());
-        assert_eq!(actual.unwrap(), Integer { value: 42 });
+    macro_rules! test_from_str_input {
+        ($name:ident, $input:expr, $token:expr) => {
+            #[test]
+            fn $name() {
+                let input = $input;
+                let actual = Token::from_str(input);
+                assert!(actual.is_ok());
+                assert_eq!(actual.unwrap(), $token);
+            }
+        };
     }
 
-    #[test]
-    fn from_str_symbol() {
-        let input = "foobar";
-        let actual = Token::from_str(input);
-        assert!(actual.is_ok());
-        assert_eq!(actual.unwrap(), Symbol { value: "foobar".to_string() });
-    }
+    test_from_str_input!(from_str_integer, "42", Integer { value: 42 });
+    test_from_str_input!(from_str_symbol, "foobar", Symbol { value: "foobar".to_string() });
 
     macro_rules! test_parse_input {
         ($name:ident, $input:expr, $( $token:expr ),*) => {
