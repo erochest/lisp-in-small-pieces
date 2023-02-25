@@ -45,8 +45,7 @@ impl FromStr for Token {
         if let Ok(value) = s.parse() {
             Ok(Token::Integer { value })
         } else {
-            unimplemented!()
-            // Err(Error::TokenParseError(s.to_string()))
+            Err(Error::TokenParseError(s.to_string()))
         }
     }
 }
@@ -100,9 +99,21 @@ mod tests {
 
     use pretty_assertions::assert_eq;
 
-    use crate::reader::{Token, read_lisp};
+    use crate::{reader::{Token, read_lisp}, error::Error};
 
     use Token::*;
+
+    #[test]
+    fn from_str_error() {
+        let input = "";
+        let actual = Token::from_str(input);
+        assert!(actual.is_err());
+        let err = actual.unwrap_err();
+        assert!(match  err {
+            Error::TokenParseError(_) => true,
+            _ => false,
+        });
+    }
 
     #[test]
     fn from_str_integer() {
