@@ -4,7 +4,7 @@ use lazy_static::lazy_static;
 use regex::Regex;
 use serde::Serialize;
 
-use crate::error::{Result, Error};
+use crate::error::{Error, Result};
 
 mod scanner;
 
@@ -59,14 +59,19 @@ impl FromStr for Token {
         } else if let Some(captures) = RE_RATIONAL.captures(s) {
             let numerator = captures[1].parse()?;
             let denominator = captures[2].parse()?;
-            Ok(Token::Rational { numerator, denominator })
+            Ok(Token::Rational {
+                numerator,
+                denominator,
+            })
         } else if s.starts_with('"') {
-            let value = &s[1..s.len()-1];
+            let value = &s[1..s.len() - 1];
             let value = RE_ESCAPE.replace_all(value, "$1");
             let value = value.to_string();
             Ok(Token::String { value })
         } else if !s.is_empty() {
-            Ok(Token::Symbol { value: s.to_string() })
+            Ok(Token::Symbol {
+                value: s.to_string(),
+            })
         } else {
             Err(Error::TokenParseError(s.to_string()))
         }
@@ -75,8 +80,12 @@ impl FromStr for Token {
 
 pub fn read_lisp<R: Read>(reader: &mut R) -> Result<Vec<Token>> {
     scan(reader)?
-    .map(|s| s.get_string().ok_or_else(|| Error::TokenParseError(String::new())).and_then(|s| Token::from_str(&s)))
-    .collect()
+        .map(|s| {
+            s.get_string()
+                .ok_or_else(|| Error::TokenParseError(String::new()))
+                .and_then(|s| Token::from_str(&s))
+        })
+        .collect()
 }
 
 #[cfg(test)]
@@ -85,7 +94,10 @@ mod tests {
 
     use pretty_assertions::assert_eq;
 
-    use crate::{reader::{Token, read_lisp}, error::Error};
+    use crate::{
+        error::Error,
+        reader::{read_lisp, Token},
+    };
 
     use Token::*;
 
@@ -95,7 +107,7 @@ mod tests {
         let actual = Token::from_str(input);
         assert!(actual.is_err());
         let err = actual.unwrap_err();
-        assert!(match  err {
+        assert!(match err {
             Error::TokenParseError(_) => true,
             _ => false,
         });
@@ -114,12 +126,43 @@ mod tests {
     }
 
     test_from_str_input!(from_str_integer, "42", Integer { value: 42 });
-    test_from_str_input!(from_str_symbol, "foobar", Symbol { value: "foobar".to_string() });
+    test_from_str_input!(
+        from_str_symbol,
+        "foobar",
+        Symbol {
+            value: "foobar".to_string()
+        }
+    );
     test_from_str_input!(from_str_float, "3.14159", Float { value: 3.14159 });
-    test_from_str_input!(from_str_rational, "2/3", Rational { numerator: 2, denominator: 3 });
-    test_from_str_input!(from_str_empty_string, "\"\"", String { value: "".to_string() });
-    test_from_str_input!(from_str_string, "\"Hello, World!\"", String { value: "Hello, World!".to_string() });
-    test_from_str_input!(from_str_string_escaped, "\"Hello, \\\"World!\\\"\"", String { value: "Hello, \"World!\"".to_string() });
+    test_from_str_input!(
+        from_str_rational,
+        "2/3",
+        Rational {
+            numerator: 2,
+            denominator: 3
+        }
+    );
+    test_from_str_input!(
+        from_str_empty_string,
+        "\"\"",
+        String {
+            value: "".to_string()
+        }
+    );
+    test_from_str_input!(
+        from_str_string,
+        "\"Hello, World!\"",
+        String {
+            value: "Hello, World!".to_string()
+        }
+    );
+    test_from_str_input!(
+        from_str_string_escaped,
+        "\"Hello, \\\"World!\\\"\"",
+        String {
+            value: "Hello, \"World!\"".to_string()
+        }
+    );
     test_from_str_input!(from_str_nil, "nil", Nil);
 
     macro_rules! test_parse_input {
@@ -134,6 +177,11 @@ mod tests {
         };
     }
 
-    test_parse_input!(parse_sequence, "42 13 99", Integer { value: 42 }, Integer { value: 13 }, Integer { value: 99 });
-
+    test_parse_input!(
+        parse_sequence,
+        "42 13 99",
+        Integer { value: 42 },
+        Integer { value: 13 },
+        Integer { value: 99 }
+    );
 }

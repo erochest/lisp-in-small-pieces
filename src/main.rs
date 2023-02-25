@@ -1,4 +1,4 @@
-use std::{path::PathBuf, fs::File};
+use std::{fs::File, path::PathBuf};
 
 use clap::{Parser, Subcommand};
 use clap_verbosity_flag::Verbosity;
@@ -21,14 +21,14 @@ fn main() -> Result<()> {
             for token in tokens {
                 println!("{}", serde_json::to_string(&token)?);
             }
-        },
+        }
     };
 
     Ok(())
 }
 
 /// A small lisp implementation.
-/// 
+///
 /// I made this while working through the book *Lisp in Small Pieces*.
 #[derive(Debug, Parser)]
 struct Cli {

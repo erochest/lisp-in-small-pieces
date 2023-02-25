@@ -1,4 +1,8 @@
-use std::{io::{Read, read_to_string}, ops::Range, rc::Rc};
+use std::{
+    io::{read_to_string, Read},
+    ops::Range,
+    rc::Rc,
+};
 
 use crate::error::Result;
 
@@ -67,7 +71,7 @@ impl Iterator for Scanner {
         self.skip_whitespace();
 
         if self.at_end() {
-            return None
+            return None;
         }
 
         let start = self.i;
@@ -88,7 +92,9 @@ impl Iterator for Scanner {
 
 impl ScanToken {
     pub fn get_string(&self) -> Option<String> {
-        self.buffer.get(self.range.clone()).map(|cs| cs.iter().collect())
+        self.buffer
+            .get(self.range.clone())
+            .map(|cs| cs.iter().collect())
     }
 }
 
@@ -109,7 +115,10 @@ mod tests {
 
     #[test]
     fn test_get_string() {
-        let token = ScanToken { range: 4..10, buffer: Rc::new("    foobar".chars().collect()) };
+        let token = ScanToken {
+            range: 4..10,
+            buffer: Rc::new("    foobar".chars().collect()),
+        };
         assert_eq!(token.get_string(), Some("foobar".to_string()));
     }
 
@@ -214,7 +223,9 @@ mod tests {
         assert_eq!(tokens.len(), 1);
 
         let token = tokens[0].get_string();
-        assert_eq!(token, Some("\"this string \\\"contains\\\" a string\"".to_string()));
+        assert_eq!(
+            token,
+            Some("\"this string \\\"contains\\\" a string\"".to_string())
+        );
     }
-
 }

@@ -1,6 +1,6 @@
 use assert_cmd::prelude::*;
 
-use std::{process::Command, path::Path};
+use std::{path::Path, process::Command};
 
 #[test]
 fn test_main() {
