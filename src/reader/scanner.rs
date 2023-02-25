@@ -199,7 +199,7 @@ mod tests {
     test_scan!(test_list_end, " ) ", 1, ")".to_string());
     test_scan!(test_empty_list, " () ", 2, "(".to_string(), ")".to_string());
     test_scan!(test_integer_list_end, " 42) ", 2, "42".to_string(), ")".to_string());
-    // test_symbol_list_end_list_end
-    // test_list_symbol
+    test_scan!(test_symbol_list_end_list_end, " foo-bar))", 3, "foo-bar".to_string(), ")".to_string(), ")".to_string());
+    test_scan!(test_list_symbol, "(foo-bar)", 3, "(".to_string(), "foo-bar".to_string(), ")".to_string());
 
 }
