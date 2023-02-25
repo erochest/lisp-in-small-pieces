@@ -45,6 +45,7 @@ impl FromStr for Token {
         lazy_static! {
             static ref RE_RATIONAL: Regex = Regex::new(r"([+-]?\d+)/(\d+)").unwrap();
             static ref RE_STRING: Regex = Regex::new("\"((\\\\\")|[^\"]*)\"").unwrap();
+            static ref RE_ESCAPE: Regex = Regex::new(r"\\(.)").unwrap();
         }
 
         if let Ok(value) = s.parse() {
@@ -56,7 +57,10 @@ impl FromStr for Token {
             let denominator = captures[2].parse()?;
             Ok(Token::Rational { numerator, denominator })
         } else if s.starts_with('"') {
-            Ok(Token::String { value: s[1..s.len()-1].to_string() })
+            let value = &s[1..s.len()-1];
+            let value = RE_ESCAPE.replace_all(value, "$1");
+            let value = value.to_string();
+            Ok(Token::String { value })
         } else if s.len() > 0 {
             Ok(Token::Symbol { value: s.to_string() })
         } else {
@@ -148,6 +152,7 @@ mod tests {
     test_from_str_input!(from_str_rational, "2/3", Rational { numerator: 2, denominator: 3 });
     test_from_str_input!(from_str_empty_string, "\"\"", String { value: "".to_string() });
     test_from_str_input!(from_str_string, "\"Hello, World!\"", String { value: "Hello, World!".to_string() });
+    test_from_str_input!(from_str_string_escaped, "\"Hello, \\\"World!\\\"\"", String { value: "Hello, \"World!\"".to_string() });
 
     macro_rules! test_parse_input {
         ($name:ident, $input:expr, $( $token:expr ),*) => {
