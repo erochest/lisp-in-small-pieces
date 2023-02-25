@@ -44,6 +44,8 @@ impl FromStr for Token {
     fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
         if let Ok(value) = s.parse() {
             Ok(Token::Integer { value })
+        } else if let Ok(value) = s.parse() {
+            Ok(Token::Float { value })
         } else if s.len() > 0 {
             Ok(Token::Symbol { value: s.to_string() })
         } else {
@@ -131,6 +133,7 @@ mod tests {
 
     test_from_str_input!(from_str_integer, "42", Integer { value: 42 });
     test_from_str_input!(from_str_symbol, "foobar", Symbol { value: "foobar".to_string() });
+    test_from_str_input!(from_str_float, "3.14159", Float { value: 3.14159 });
 
     macro_rules! test_parse_input {
         ($name:ident, $input:expr, $( $token:expr ),*) => {
