@@ -2,7 +2,6 @@ use std::{path::PathBuf, fs::File};
 
 use clap::{Parser, Subcommand};
 use clap_verbosity_flag::Verbosity;
-use env_logger;
 use human_panic::setup_panic;
 
 use lisp::error::Result;

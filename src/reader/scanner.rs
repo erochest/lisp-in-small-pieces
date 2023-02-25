@@ -1,4 +1,4 @@
-use std::{io::{Read, read_to_string}, ops::Range, marker::PhantomData, rc::Rc, slice::SliceIndex};
+use std::{io::{Read, read_to_string}, ops::Range, rc::Rc};
 
 use crate::error::Result;
 
@@ -15,10 +15,6 @@ pub struct ScanToken {
 }
 
 impl Scanner {
-    pub fn new(buffer: Vec<char>) -> Self {
-        Scanner { i: 0, buffer: Rc::new(buffer) }
-    }
-
     pub fn from_str<S: AsRef<str>>(buffer: S) -> Self {
         let buffer = Rc::new(buffer.as_ref().chars().collect());
         Scanner { i: 0, buffer }
@@ -96,9 +92,9 @@ impl ScanToken {
     }
 }
 
-pub fn scan<'a, R: Read>(reader: R) -> Result<Scanner> {
+pub fn scan<R: Read>(reader: R) -> Result<Scanner> {
     let input = read_to_string(reader)?;
-    Ok(Scanner::from_str(&input))
+    Ok(Scanner::from_str(input))
 }
 
 #[cfg(test)]

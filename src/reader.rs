@@ -56,7 +56,7 @@ impl FromStr for Token {
             Ok(Token::Integer { value })
         } else if let Ok(value) = s.parse() {
             Ok(Token::Float { value })
-        } else if let Some(captures) = RE_RATIONAL.captures(&s) {
+        } else if let Some(captures) = RE_RATIONAL.captures(s) {
             let numerator = captures[1].parse()?;
             let denominator = captures[2].parse()?;
             Ok(Token::Rational { numerator, denominator })
@@ -65,7 +65,7 @@ impl FromStr for Token {
             let value = RE_ESCAPE.replace_all(value, "$1");
             let value = value.to_string();
             Ok(Token::String { value })
-        } else if s.len() > 0 {
+        } else if !s.is_empty() {
             Ok(Token::Symbol { value: s.to_string() })
         } else {
             Err(Error::TokenParseError(s.to_string()))
