@@ -42,10 +42,19 @@ impl FromStr for Token {
     type Err = Error;
 
     fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
+        lazy_static! {
+            static ref RE_RATIONAL: Regex = Regex::new(r"([+-]?\d+)/(\d+)").unwrap();
+            static ref RE_STRING: Regex = Regex::new("\"((\\\\\")|[^\"]*)\"").unwrap();
+        }
+
         if let Ok(value) = s.parse() {
             Ok(Token::Integer { value })
         } else if let Ok(value) = s.parse() {
             Ok(Token::Float { value })
+        } else if let Some(captures) = RE_RATIONAL.captures(&s) {
+            let numerator = captures[1].parse()?;
+            let denominator = captures[2].parse()?;
+            Ok(Token::Rational { numerator, denominator })
         } else if s.len() > 0 {
             Ok(Token::Symbol { value: s.to_string() })
         } else {
@@ -134,6 +143,7 @@ mod tests {
     test_from_str_input!(from_str_integer, "42", Integer { value: 42 });
     test_from_str_input!(from_str_symbol, "foobar", Symbol { value: "foobar".to_string() });
     test_from_str_input!(from_str_float, "3.14159", Float { value: 3.14159 });
+    test_from_str_input!(from_str_rational, "2/3", Rational { numerator: 2, denominator: 3 });
 
     macro_rules! test_parse_input {
         ($name:ident, $input:expr, $( $token:expr ),*) => {
