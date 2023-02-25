@@ -37,6 +37,8 @@ pub enum Token {
     Symbol {
         value: String,
     },
+    ListStart,
+    ListEnd,
     Nil,
 }
 
@@ -52,6 +54,10 @@ impl FromStr for Token {
 
         if s == "nil" {
             Ok(Token::Nil)
+        } else if s == "(" {
+            Ok(Token::ListStart)
+        } else if s == ")" {
+            Ok(Token::ListEnd)
         } else if let Ok(value) = s.parse() {
             Ok(Token::Integer { value })
         } else if let Ok(value) = s.parse() {
@@ -184,4 +190,5 @@ mod tests {
         Integer { value: 13 },
         Integer { value: 99 }
     );
+    test_parse_input!(parse_empty_cons, "()", ListStart, ListEnd);
 }
