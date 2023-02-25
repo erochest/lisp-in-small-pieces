@@ -11,6 +11,7 @@ pub enum Error {
     IoError(io::Error),
     SerializationError(serde_json::Error),
     IntParseError(ParseIntError),
+    TokenParseError(String),
 }
 
 use Error::*;
@@ -21,6 +22,7 @@ impl fmt::Display for Error {
             IoError(ref err) => err.fmt(f),
             SerializationError(ref err) => err.fmt(f),
             IntParseError(ref err) => err.fmt(f),
+            TokenParseError(ref input) => write!(f, "token parsing error on {:?}", input),
         }
     }
 }

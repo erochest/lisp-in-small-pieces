@@ -1,10 +1,10 @@
-use std::io::Read;
+use std::{io::Read, str::FromStr};
 
 use lazy_static::lazy_static;
 use regex::Regex;
 use serde::Serialize;
 
-use crate::error::Result;
+use crate::error::{Result, Error};
 
 mod scanner;
 
@@ -38,6 +38,19 @@ pub enum Token {
     Nil,
 }
 
+impl FromStr for Token {
+    type Err = Error;
+
+    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
+        if let Ok(value) = s.parse() {
+            Ok(Token::Integer { value })
+        } else {
+            unimplemented!()
+            // Err(Error::TokenParseError(s.to_string()))
+        }
+    }
+}
+
 pub fn read_lisp<R: Read>(reader: &mut R) -> Result<Vec<Token>> {
     lazy_static! {
         static ref RE_RATIONAL: Regex = Regex::new(r"([+-]?\d+)/(\d+)").unwrap();
@@ -46,7 +59,20 @@ pub fn read_lisp<R: Read>(reader: &mut R) -> Result<Vec<Token>> {
 
     let mut buffer = String::new();
     reader.read_to_string(&mut buffer)?;
-    let buffer = buffer.trim();
+    buffer = buffer.trim().to_string();
+
+    // let mut tokens = Vec::new();
+    // let mut i = 0;
+    // let mut current = String::new();
+
+    // for c in buffer.chars() {
+    //     if c.is_whitespace() {
+    //         continue;
+    //     }
+
+    // }
+
+    // return Ok(tokens);
 
     if buffer == "nil" {
         Ok(vec![Token::Nil])
@@ -70,11 +96,21 @@ pub fn read_lisp<R: Read>(reader: &mut R) -> Result<Vec<Token>> {
 
 #[cfg(test)]
 mod tests {
+    use std::str::FromStr;
+
     use pretty_assertions::assert_eq;
 
     use crate::reader::{Token, read_lisp};
 
     use Token::*;
+
+    #[test]
+    fn from_str_integer() {
+        let input = "42";
+        let actual = Token::from_str(input);
+        assert!(actual.is_ok());
+        assert_eq!(actual.unwrap(), Integer { value: 42 });
+    }
 
     macro_rules! test_parse_input {
         ($name:ident, $input:expr, $( $token:expr ),*) => {
@@ -96,5 +132,6 @@ mod tests {
     test_parse_input!(parse_empty_string, "\"\"", String { value: "".to_string() });
     test_parse_input!(parse_string, " \"Hello, world!\" ", String { value: "Hello, world!".to_string() });
     test_parse_input!(parse_nil, "  nil ", Nil);
+    // test_parse_input!(parse_sequence, "42 13 99", Integer { value: 42 }, Integer { value: 13 }, Integer { value: 99 });
 
 }
