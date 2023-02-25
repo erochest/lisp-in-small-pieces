@@ -44,6 +44,8 @@ impl FromStr for Token {
     fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
         if let Ok(value) = s.parse() {
             Ok(Token::Integer { value })
+        } else if s.len() > 0 {
+            Ok(Token::Symbol { value: s.to_string() })
         } else {
             Err(Error::TokenParseError(s.to_string()))
         }
@@ -121,6 +123,14 @@ mod tests {
         let actual = Token::from_str(input);
         assert!(actual.is_ok());
         assert_eq!(actual.unwrap(), Integer { value: 42 });
+    }
+
+    #[test]
+    fn from_str_symbol() {
+        let input = "foobar";
+        let actual = Token::from_str(input);
+        assert!(actual.is_ok());
+        assert_eq!(actual.unwrap(), Symbol { value: "foobar".to_string() });
     }
 
     macro_rules! test_parse_input {
