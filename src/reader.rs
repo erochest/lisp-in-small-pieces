@@ -1,3 +1,4 @@
+use std::iter::Peekable;
 use std::{io::Read, str::FromStr};
 
 use lazy_static::lazy_static;
@@ -9,6 +10,8 @@ use crate::error::{Error, Result};
 mod scanner;
 
 use crate::reader::scanner::scan;
+
+use self::scanner::ScanToken;
 
 #[derive(Debug, Serialize, PartialEq)]
 #[serde(tag = "type")]
@@ -32,6 +35,10 @@ pub enum Token {
     ListStart,
     ListEnd,
     EmptyList,
+    Cons {
+        head: Box<Token>,
+        tail: Box<Token>,
+    },
     Nil,
 }
 
@@ -86,6 +93,18 @@ fn is_list_end(opt: Option<&Result<Token>>) -> bool {
     false
 }
 
+fn read_list_end(tokens: &mut Peekable<impl Iterator<Item = Result<Token>>>) -> Result<Token> {
+    if let Some(head) = tokens.next() {
+        let head = head?;
+        if head == Token::ListEnd {
+            return Ok(Token::EmptyList)
+        // } else if head == (Token::Symbol { value: ".".to_string() }) {
+            // return Ok(Token::Cons { head, tail: () })
+        }
+    }
+    Err(Error::TokenParseError("()".to_string()))
+}
+
 pub fn read_lisp<R: Read>(reader: &mut R) -> Result<Vec<Token>> {
     let mut tokens = scan(reader)?
         .map(|s| {
@@ -99,9 +118,9 @@ pub fn read_lisp<R: Read>(reader: &mut R) -> Result<Vec<Token>> {
     loop {
         if let Some(token) = tokens.next() {
             let token = token?;
-            if token == Token::ListStart && is_list_end(tokens.peek()) {
-                tokens.next();
-                buffer.push(Token::EmptyList);
+            if token == Token::ListStart {
+                let list_token = read_list_end(&mut tokens)?;
+                buffer.push(list_token);
             } else {
                 buffer.push(token);
             }
@@ -212,8 +231,8 @@ mod tests {
         Integer { value: 99 }
     );
     test_parse_input!(parse_empty_cons, "()", EmptyList);
+    // test_parse_input!(parse_dotted_cons, "(13 . 42)", Cons { head: Box::new(Integer { value: 13 }), tail: Box::new(Integer { value: 42 })});
 
-// TODO: parse a dotted-cons cell (`(42 . 43)`)
 // TODO: parse a cons list (`(42 43 44)`)
 // TODO: parse a quoted symbol (`'foobar`)
 // TODO: parse a quoted list (`'(+ 1 3)`)
