@@ -46,4 +46,14 @@ mod tests {
         assert_eq!(parser.buffer.len(), 1);
         assert_eq!(*parser.buffer[0], Number(13));
     }
+
+    #[test]
+    fn test_shift_empty_does_nothing() {
+        let input: Vec<Calculator> = vec![];
+        let input = input.iter();
+        let mut parser = Parser::new(input);
+
+        parser.shift();
+        assert!(parser.buffer.is_empty());
+    }
 }
