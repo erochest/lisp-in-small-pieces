@@ -7,6 +7,7 @@ use serde::Serialize;
 
 use crate::error::{Error, Result};
 
+mod parser;
 mod scanner;
 
 use crate::reader::scanner::scan;
