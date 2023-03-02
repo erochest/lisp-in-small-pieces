@@ -9,24 +9,8 @@ pub struct Parser<'a, T> {
 impl<'a, T> Parser<'a, T>
 where T: Parseable + Debug
 {
-    fn new<I: Iterator<Item = T> + 'a>(input: I) -> Self {
+    pub fn new<I: Iterator<Item = T> + 'a>(input: I) -> Self {
         Parser { input: Box::new(input), buffer: Vec::new() }
-    }
-
-    fn shift(&mut self) {
-        if let Some(token) = self.input.next() {
-            self.buffer.push(token);
-        }
-    }
-
-    fn reduce(&mut self) -> bool {
-        if let Some((to_replace, production)) = T::propose_reduction(&self.buffer) {
-            self.buffer.truncate(self.buffer.len() - to_replace);
-            self.buffer.push(production);
-            true
-        } else {
-            false
-        }
     }
 
     pub fn parse(mut self) -> Vec<T> {
@@ -49,7 +33,7 @@ fn reduce_buffer<T: Parseable + Debug>(buffer: &mut Vec<T>) -> bool {
     }
 }
 
-trait Parseable {
+pub trait Parseable {
     fn propose_reduction(buffer: &Vec<Self>) -> Option<(usize, Self)> where Self: Sized;
 }
 
