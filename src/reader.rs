@@ -10,8 +10,10 @@ use crate::error::{Error, Result};
 mod parser;
 mod scanner;
 
+use crate::reader::parser::Parseable;
 use crate::reader::scanner::scan;
 
+use self::parser::Parser;
 use self::scanner::ScanToken;
 
 #[derive(Debug, Serialize, PartialEq)]
@@ -85,6 +87,35 @@ impl FromStr for Token {
     }
 }
 
+impl Parseable for Token {
+    fn propose_reduction(buffer: &Vec<Self>) -> Option<(usize, Self)> where Self: Sized {
+        if buffer.len() >= 2 {
+            if let Some(tail) = buffer.get(buffer.len()-2..) {
+                if tail[0].is_list_start() && tail[1].is_list_end() {
+                    return Some((2, Token::EmptyList))
+                }
+            }
+        }
+        None
+    }
+}
+
+impl Token {
+    fn is_list_start(&self) -> bool {
+        match self {
+            Token::ListStart => true,
+            _ => false,
+        }
+    }
+
+    fn is_list_end(&self) -> bool {
+        match self {
+            Token::ListEnd => true,
+            _ => false,
+        }
+    }
+}
+
 fn is_list_end(opt: Option<&Result<Token>>) -> bool {
     if let Some(r) = opt {
         if let Ok(t) = r {
@@ -107,30 +138,33 @@ fn read_list_end(tokens: &mut Peekable<impl Iterator<Item = Result<Token>>>) -> 
 }
 
 pub fn read_lisp<R: Read>(reader: &mut R) -> Result<Vec<Token>> {
-    let mut tokens = scan(reader)?
+    let tokens = scan(reader)?
         .map(|s| {
             s.get_string()
                 .ok_or_else(|| Error::TokenParseError(String::new()))
                 .and_then(|s| Token::from_str(&s))
         })
-        .peekable();
-    let mut buffer = Vec::new();
+        .collect::<Result<Vec<_>>>()?
+        .into_iter();
+    let parser = Parser::new(tokens);
 
-    loop {
-        if let Some(token) = tokens.next() {
-            let token = token?;
-            if token == Token::ListStart {
-                let list_token = read_list_end(&mut tokens)?;
-                buffer.push(list_token);
-            } else {
-                buffer.push(token);
-            }
-        } else {
-            break;
-        }
-    }
+    let result = parser.parse();
 
-    Ok(buffer)
+    // loop {
+    //     if let Some(token) = tokens.next() {
+    //         let token = token?;
+    //         if token == Token::ListStart {
+    //             let list_token = read_list_end(&mut tokens)?;
+    //             buffer.push(list_token);
+    //         } else {
+    //             buffer.push(token);
+    //         }
+    //     } else {
+    //         break;
+    //     }
+    // }
+
+    Ok(result)
 }
 
 #[cfg(test)]
