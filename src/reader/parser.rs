@@ -161,73 +161,40 @@ mod tests {
     use Calculator::*;
 
     #[test]
-    fn test_shift_adds_item() {
-        let input = vec![Number(13), Plus, Number(42)];
-        let input = input.into_iter();
-        let mut parser = Parser::new(input);
-
-        parser.shift();
-        assert_eq!(parser.buffer.len(), 1);
-        assert_eq!(parser.buffer[0], Number(13));
-    }
-
-    #[test]
-    fn test_shift_empty_does_nothing() {
+    fn test_parse_empty_does_nothing() {
         let input: Vec<Calculator> = vec![];
         let input = input.into_iter();
-        let mut parser = Parser::new(input);
+        let parser = Parser::new(input);
 
-        parser.shift();
-        assert!(parser.buffer.is_empty());
+        let result = parser.parse();
+        assert!(result.is_empty());
     }
 
     #[test]
-    fn test_reduce_replaces_single_things() {
-        let input = vec![Number(13), Plus, Number(42)];
+    fn test_parse_replaces_single_things() {
+        let input = vec![Number(13)];
         let input = input.into_iter();
-        let mut parser = Parser::new(input);
+        let parser = Parser::new(input);
 
-        parser.shift();
-        assert!(parser.reduce());
-        assert_eq!(parser.buffer.len(), 1);
-        assert_eq!(parser.buffer[0], Factor(Box::new(Number(13))))
+        let result = parser.parse();
+
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0], Factor(Box::new(Number(13))))
     }
 
     #[test]
-    fn test_reduce_replaces_lists() {
+    fn test_parse_replaces_lists() {
         let input = vec![Number(13), Multiply, Number(42)];
         let input = input.into_iter();
-        let mut parser = Parser::new(input);
+        let parser = Parser::new(input);
 
-        parser.shift();
-        assert!(parser.reduce());
-        parser.shift();
-        parser.shift();
-        assert!(parser.reduce());
-        assert!(parser.reduce());
-        assert_eq!(parser.buffer.len(), 1);
-        assert_eq!(parser.buffer[0], Term(
+        let result = parser.parse();
+
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0], Term(
             Box::new(Factor(Box::new(Number(13)))),
             Box::new(Multiply),
             Box::new(Factor(Box::new(Number(42)))),
         ));
-    }
-
-    #[test]
-    fn test_parses_expression() {
-        let input = vec![Number(3), Multiply, Number(4)];
-        let input = input. into_iter();
-        let parser = Parser::new(input);
-
-        let result = parser.parse();
-        assert_eq!(result.len(), 1);
-        assert_eq!(
-            result[0],
-            Term(
-                Box::new(Factor(Box::new(Number(3)))),
-                Box::new(Multiply),
-                Box::new(Factor(Box::new(Number(4))))
-            )
-        );
     }
 }
