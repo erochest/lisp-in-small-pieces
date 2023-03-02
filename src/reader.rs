@@ -14,9 +14,8 @@ use crate::reader::parser::Parseable;
 use crate::reader::scanner::scan;
 
 use self::parser::Parser;
-use self::scanner::ScanToken;
 
-#[derive(Debug, Serialize, PartialEq)]
+#[derive(Debug, Serialize, PartialEq, Clone)]
 #[serde(tag = "type")]
 pub enum Token {
     Integer {
@@ -89,10 +88,19 @@ impl FromStr for Token {
 
 impl Parseable for Token {
     fn propose_reduction(buffer: &Vec<Self>) -> Option<(usize, Self)> where Self: Sized {
-        if buffer.len() >= 2 {
-            if let Some(tail) = buffer.get(buffer.len()-2..) {
+        let buffer_len = buffer.len();
+        if buffer_len >= 2 {
+            if let Some(tail) = buffer.get(buffer_len-2..) {
                 if tail[0].is_list_start() && tail[1].is_list_end() {
                     return Some((2, Token::EmptyList))
+                }
+            }
+        }
+        if buffer_len >= 5 {
+            if let Some(tail) = buffer.get(buffer_len-5..) {
+                let dot = Token::Symbol { value: ".".to_string() };
+                if tail[0].is_list_start() && tail[2] == dot && tail[4].is_list_end() {
+                    return Some((5, Token::Cons { head: Box::new(tail[1].clone()), tail: Box::new(tail[3].clone()) }))
                 }
             }
         }
@@ -266,7 +274,7 @@ mod tests {
         Integer { value: 99 }
     );
     test_parse_input!(parse_empty_cons, "()", EmptyList);
-    // test_parse_input!(parse_dotted_cons, "(13 . 42)", Cons { head: Box::new(Integer { value: 13 }), tail: Box::new(Integer { value: 42 })});
+    test_parse_input!(parse_dotted_cons, "(13 . 42)", Cons { head: Box::new(Integer { value: 13 }), tail: Box::new(Integer { value: 42 })});
 
 // TODO: parse a cons list (`(42 43 44)`)
 // TODO: parse a quoted symbol (`'foobar`)
