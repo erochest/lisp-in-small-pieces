@@ -86,6 +86,49 @@ impl FromStr for Token {
     }
 }
 
+impl From<isize> for Token {
+    fn from(value: isize) -> Self {
+        Token::Integer { value }
+    }
+}
+
+impl From<f64> for Token {
+    fn from(value: f64) -> Self {
+        Token::Float { value }
+    }
+}
+
+impl From<(isize, isize)> for Token {
+    fn from(value: (isize, isize)) -> Self {
+        Token::Rational { numerator: value.0, denominator: value.1 }
+    }
+}
+
+impl From<&str> for Token {
+    fn from(value: &str) -> Self {
+        Token::String { value: value.to_string() }
+    }
+}
+
+impl From<String> for Token {
+    fn from(value: String) -> Self {
+        Token::String { value }
+    }
+}
+
+impl<T: Into<Token>> From<Vec<T>> for Token {
+    fn from(value: Vec<T>) -> Self {
+        let mut cursor = Token::EmptyList;
+        for item in value.into_iter().rev() {
+            cursor = Token::Cons {
+                head: Box::new(item.into()),
+                tail: Box::new(cursor),
+            };
+        }
+        cursor
+    }
+}
+
 impl Parseable for Token {
     fn propose_reduction(buffer: &Vec<Self>) -> Option<(usize, Self)> where Self: Sized {
         let buffer_len = buffer.len();
@@ -200,6 +243,53 @@ mod tests {
         });
     }
 
+    #[test]
+    fn from_isize() {
+        assert_eq!(Integer { value: 99 }, 99isize.into());
+    }
+
+    #[test]
+    fn from_f64() {
+        assert_eq!(Float { value: 3.14159 }, 3.14159f64.into());
+    }
+
+    #[test]
+    fn from_int_pair() {
+        assert_eq!(Rational { numerator: 13, denominator: 74 }, (13, 74).into());
+    }
+
+    #[test]
+    fn from_str() {
+        assert_eq!(String { value: "a string".to_string() }, "a string".into());
+    }
+
+    #[test]
+    fn from_string() {
+        assert_eq!(String { value: "another string".to_string() }, "another string".to_string().into());
+    }
+
+    #[test]
+    fn from_token_vec() {
+        let input: Vec<Token> = vec![
+            42.into(),
+            "+".into(),
+            99.into(),
+        ];
+        let expected = Cons {
+            head: Box::new(42.into()),
+            tail: Box::new(Cons {
+                head: Box::new("+".into()),
+                tail: Box::new(Cons {
+                    head: Box::new(99.into()),
+                    tail: Box::new(EmptyList),
+                })
+            }),
+        };
+        assert_eq!(expected, input.into());
+    }
+
+    // TODO From<Vec<Into<Token>>
+
     macro_rules! test_from_str_input {
         ($name:ident, $input:expr, $token:expr) => {
             #[test]
@@ -275,6 +365,7 @@ mod tests {
     );
     test_parse_input!(parse_empty_cons, "()", EmptyList);
     test_parse_input!(parse_dotted_cons, "(13 . 42)", Cons { head: Box::new(Integer { value: 13 }), tail: Box::new(Integer { value: 42 })});
+    // test_parse_input!(parse_list, "(42 43 44)", Cons { head: Box::new(Integer { value: 42 }), tail: Box::new(Cons { head: (), tail: () })})
 
 // TODO: parse a cons list (`(42 43 44)`)
 // TODO: parse a quoted symbol (`'foobar`)
