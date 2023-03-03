@@ -129,8 +129,22 @@ impl<T: Into<Token>> From<Vec<T>> for Token {
     }
 }
 
+impl From<&[Token]> for Token {
+    fn from(value: &[Token]) -> Self {
+        let mut cursor = Token::EmptyList;
+        for item in value.iter().rev() {
+            cursor = Token::Cons {
+                head: Box::new(item.to_owned()),
+                tail: Box::new(cursor),
+            };
+        }
+        cursor
+    }
+}
+
 impl Parseable for Token {
     fn propose_reduction(buffer: &Vec<Self>) -> Option<(usize, Self)> where Self: Sized {
+        // TODO: refactor these into smaller functions and chain them with `Option::or_else`.
         let buffer_len = buffer.len();
         if buffer_len >= 2 {
             if let Some(tail) = buffer.get(buffer_len-2..) {
@@ -144,6 +158,15 @@ impl Parseable for Token {
                 let dot = Token::Symbol { value: ".".to_string() };
                 if tail[0].is_list_start() && tail[2] == dot && tail[4].is_list_end() {
                     return Some((5, Token::Cons { head: Box::new(tail[1].clone()), tail: Box::new(tail[3].clone()) }))
+                }
+            }
+        }
+        if buffer_len > 2 && buffer[buffer_len-1] == Token::ListEnd {
+            for (i, item) in buffer.iter().rev().enumerate() {
+                if *item == Token::ListStart {
+                    let start = buffer_len - i;
+                    let list: Token = buffer[start..buffer_len-1].into();
+                    return Some((i+1, list))
                 }
             }
         }
@@ -288,7 +311,25 @@ mod tests {
         assert_eq!(expected, input.into());
     }
 
-    // TODO From<Vec<Into<Token>>
+    #[test]
+    fn from_token_slice() {
+        let input: &[Token] = &[
+            42.into(),
+            "+".into(),
+            99.into(),
+        ];
+        let expected = Cons {
+            head: Box::new(42.into()),
+            tail: Box::new(Cons {
+                head: Box::new("+".into()),
+                tail: Box::new(Cons {
+                    head: Box::new(99.into()),
+                    tail: Box::new(EmptyList),
+                })
+            }),
+        };
+        assert_eq!(expected, input.into());
+    }
 
     macro_rules! test_from_str_input {
         ($name:ident, $input:expr, $token:expr) => {
@@ -365,9 +406,9 @@ mod tests {
     );
     test_parse_input!(parse_empty_cons, "()", EmptyList);
     test_parse_input!(parse_dotted_cons, "(13 . 42)", Cons { head: Box::new(Integer { value: 13 }), tail: Box::new(Integer { value: 42 })});
-    // test_parse_input!(parse_list, "(42 43 44)", Cons { head: Box::new(Integer { value: 42 }), tail: Box::new(Cons { head: (), tail: () })})
+    test_parse_input!(parse_list, "(42 43 44)", vec![Into::<Token>::into(42isize), 43.into(), 44.into()].into());
 
-// TODO: parse a cons list (`(42 43 44)`)
+// TODO: parse embedded lists (`(+ 7 (- 10 3))`)
 // TODO: parse a quoted symbol (`'foobar`)
 // TODO: parse a quoted list (`'(+ 1 3)`)
 // TODO: parse a quoted function name (`#'foobar`)
