@@ -170,6 +170,16 @@ impl Parseable for Token {
                 }
             }
         }
+        if buffer_len >= 2 && buffer[buffer_len-2] == (Token::Symbol { value: "'".to_string() }) {
+            // This one probably needs to be last so the quoted thing is fully recognized.
+            return Some((2, Token::Cons {
+                head: Box::new(Token::Symbol { value: "quote".to_string() }),
+                tail: Box::new(Token::Cons {
+                    head: Box::new(buffer[buffer_len-1].clone()),
+                    tail: Box::new(Token::EmptyList),
+                })
+             }))
+        }
         None
     }
 }
@@ -415,7 +425,11 @@ mod tests {
         ].into()
     );
 
-// TODO: parse a quoted symbol (`'foobar`)
+    test_parse_input!(parse_quoted_symbol, "'foobar", vec![
+        Symbol { value: "quote".to_string() },
+        Symbol { value: "foobar".to_string() },
+    ].into());
+
 // TODO: parse a quoted list (`'(+ 1 3)`)
 // TODO: parse a quoted function name (`#'foobar`)
 // TODO: parse comments
