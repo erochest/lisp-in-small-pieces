@@ -33,6 +33,16 @@ impl Scanner {
         }
     }
 
+    fn skip_comment(&mut self) {
+        assert!(self.buffer.get(self.i) == Some(&';'));
+        while let Some(c) = self.buffer.get(self.i) {
+            if *c == '\n' || *c == '\r' {
+                break;
+            }
+            self.i += 1;
+        }
+    }
+
     fn skip_to_end(&mut self) {
         while let Some(c) = self.buffer.get(self.i) {
             if c.is_whitespace() || *c == ')' {
@@ -87,6 +97,7 @@ impl Iterator for Scanner {
                         self.i += 1;
                     }
                 },
+                ';'  => self.skip_comment(),
                 '"'  => self.skip_string(),
                 _    => self.skip_to_end(),
             }
@@ -208,5 +219,6 @@ mod tests {
     test_scan!(test_list_symbol, "(foo-bar)", 3, "(".to_string(), "foo-bar".to_string(), ")".to_string());
     test_scan!(test_quote, "'foo-bar", 2, "'", "foo-bar");
     test_scan!(test_sharp_quote, "#'foo-bar", 2, "#'", "foo-bar");
+    test_scan!(test_comments, "something ; comment\nsomething-else", 3, "something", "; comment", "something-else");
 
 }
