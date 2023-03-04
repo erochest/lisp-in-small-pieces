@@ -183,8 +183,8 @@ fn parse_list(buffer: &Vec<Token>) -> Option<(usize, Token)> {
 
 fn parse_quoted(buffer: &Vec<Token>) -> Option<(usize, Token)> {
     let buffer_len = buffer.len();
-    if buffer_len >= 2 && buffer[buffer_len-2] == (Token::Symbol { value: "'".to_string() }) {
-        // This one probably needs to be last so the quoted thing is fully recognized.
+    if buffer_len >= 2 && buffer[buffer_len-2] == (Token::Symbol { value: "'".to_string() }) &&
+        buffer[buffer_len-1] != Token::ListStart {
         return Some((2, Token::Cons {
             head: Box::new(Token::Symbol { value: "quote".to_string() }),
             tail: Box::new(Token::Cons {
@@ -201,6 +201,7 @@ impl Parseable for Token {
         parse_empty_list(&buffer)
             .or_else(|| parse_dotted_cell(&buffer))
             .or_else(|| parse_list(&buffer))
+            // This one probably needs to be last so the quoted thing is fully recognized.
             .or_else(|| parse_quoted(&buffer))
     }
 }
@@ -416,7 +417,15 @@ mod tests {
         Symbol { value: "foobar".to_string() },
     ].into());
 
-// TODO: parse a quoted list (`'(+ 1 3)`)
+    test_parse_input!(parse_quoted_list, "'(+ 1 3)", vec![
+        Symbol { value: "quote".to_string() },
+        vec![
+            Symbol { value: "+".to_string() },
+            1.into(),
+            3.into(),
+        ].into(),
+    ].into());
+
 // TODO: parse a quoted function name (`#'foobar`)
 // TODO: parse comments
 }
