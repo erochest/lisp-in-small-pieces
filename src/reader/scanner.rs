@@ -76,7 +76,9 @@ impl Iterator for Scanner {
 
         let start = self.i;
         if let Some(peek) = self.buffer.get(self.i) {
-            if *peek == '(' {
+            if *peek == '\'' {
+                self.i += 1;
+            } else if *peek == '(' {
                 self.i += 1;
             } else if *peek == ')' {
                 self.i += 1;
@@ -201,5 +203,6 @@ mod tests {
     test_scan!(test_integer_list_end, " 42) ", 2, "42".to_string(), ")".to_string());
     test_scan!(test_symbol_list_end_list_end, " foo-bar))", 3, "foo-bar".to_string(), ")".to_string(), ")".to_string());
     test_scan!(test_list_symbol, "(foo-bar)", 3, "(".to_string(), "foo-bar".to_string(), ")".to_string());
+    test_scan!(test_quote, "'foo-bar", 2, "'", "foo-bar");
 
 }
