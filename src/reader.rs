@@ -15,6 +15,9 @@ use crate::reader::scanner::scan;
 
 use self::parser::Parser;
 
+// TODO: factor out tokens and things (token, from<_>, parseable)
+// TODO: ctors of different kinds of tokens
+
 #[derive(Debug, Serialize, PartialEq, Clone)]
 #[serde(tag = "type")]
 pub enum Token {
@@ -42,6 +45,7 @@ pub enum Token {
         tail: Box<Token>,
     },
     Nil,
+    Comment,
 }
 
 impl FromStr for Token {
@@ -60,6 +64,8 @@ impl FromStr for Token {
             Ok(Token::ListStart)
         } else if s == ")" {
             Ok(Token::ListEnd)
+        } else if s.starts_with(';') {
+            Ok(Token::Comment)
         } else if let Ok(value) = s.parse() {
             Ok(Token::Integer { value })
         } else if let Ok(value) = s.parse() {
@@ -235,6 +241,13 @@ impl Token {
             _ => false,
         }
     }
+
+    fn is_comment(&self) -> bool {
+        match self {
+            Token::Comment => true,
+            _ => false,
+        }
+    }
 }
 
 pub fn read_lisp<R: Read>(reader: &mut R) -> Result<Vec<Token>> {
@@ -243,6 +256,10 @@ pub fn read_lisp<R: Read>(reader: &mut R) -> Result<Vec<Token>> {
             s.get_string()
                 .ok_or_else(|| Error::TokenParseError(String::new()))
                 .and_then(|s| Token::from_str(&s))
+        })
+        .filter(|r| match r {
+            Ok(ref t) => !t.is_comment(),
+            Err(_) => true,
         })
         .collect::<Result<Vec<_>>>()?
         .into_iter();
@@ -446,5 +463,8 @@ mod tests {
         Symbol { value: "foo-bar".to_string() },
     ].into());
 
-// TODO: parse comments
+    test_parse_input!(parse_comments, "something ; commented\nsomething-else",
+        Symbol { value: "something".to_string() },
+        Symbol { value: "something-else".to_string() }
+    );
 }
