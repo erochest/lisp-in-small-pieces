@@ -76,18 +76,19 @@ impl Iterator for Scanner {
 
         let start = self.i;
         if let Some(peek) = self.buffer.get(self.i) {
-            if *peek == '\'' {
-                self.i += 1;
-            } else if *peek == '(' {
-                self.i += 1;
-            } else if *peek == ')' {
-                self.i += 1;
-            } else if *peek == '#' && self.buffer.get(self.i+1) == Some(&'\'') {
-                self.i += 2;
-            } else if *peek == '"' {
-                self.skip_string();
-            } else {
-                self.skip_to_end();
+            match *peek {
+                '\'' => self.i += 1,
+                '('  => self.i += 1,
+                ')'  => self.i += 1,
+                '#'  => {
+                    if self.buffer.get(self.i+1) == Some(&'\'') {
+                        self.i += 2;
+                    } else {
+                        self.i += 1;
+                    }
+                },
+                '"'  => self.skip_string(),
+                _    => self.skip_to_end(),
             }
         }
 
