@@ -407,8 +407,14 @@ mod tests {
     test_parse_input!(parse_empty_cons, "()", EmptyList);
     test_parse_input!(parse_dotted_cons, "(13 . 42)", Cons { head: Box::new(Integer { value: 13 }), tail: Box::new(Integer { value: 42 })});
     test_parse_input!(parse_list, "(42 43 44)", vec![Into::<Token>::into(42isize), 43.into(), 44.into()].into());
+    test_parse_input!(parse_embedded_lists, "(+ 7 (- 10 3))",
+        vec![
+            Symbol { value: "+".to_string() },
+            7isize.into(),
+            vec![Symbol { value: "-".to_string() }, Into::<Token>::into(10isize), 3.into()].into(),
+        ].into()
+    );
 
-// TODO: parse embedded lists (`(+ 7 (- 10 3))`)
 // TODO: parse a quoted symbol (`'foobar`)
 // TODO: parse a quoted list (`'(+ 1 3)`)
 // TODO: parse a quoted function name (`#'foobar`)
