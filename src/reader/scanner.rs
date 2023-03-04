@@ -82,6 +82,8 @@ impl Iterator for Scanner {
                 self.i += 1;
             } else if *peek == ')' {
                 self.i += 1;
+            } else if *peek == '#' && self.buffer.get(self.i+1) == Some(&'\'') {
+                self.i += 2;
             } else if *peek == '"' {
                 self.skip_string();
             } else {
@@ -204,5 +206,6 @@ mod tests {
     test_scan!(test_symbol_list_end_list_end, " foo-bar))", 3, "foo-bar".to_string(), ")".to_string(), ")".to_string());
     test_scan!(test_list_symbol, "(foo-bar)", 3, "(".to_string(), "foo-bar".to_string(), ")".to_string());
     test_scan!(test_quote, "'foo-bar", 2, "'", "foo-bar");
+    test_scan!(test_sharp_quote, "#'foo-bar", 2, "#'", "foo-bar");
 
 }
