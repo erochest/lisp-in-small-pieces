@@ -1,4 +1,3 @@
-use std::iter::Peekable;
 use std::{io::Read, str::FromStr};
 
 use lazy_static::lazy_static;
@@ -148,7 +147,7 @@ impl From<&[Token]> for Token {
     }
 }
 
-fn parse_empty_list(buffer: &Vec<Token>) -> Option<(usize, Token)> {
+fn parse_empty_list(buffer: &[Token]) -> Option<(usize, Token)> {
     let buffer_len = buffer.len();
     if buffer_len >= 2 {
         if let Some(tail) = buffer.get(buffer_len-2..) {
@@ -160,7 +159,7 @@ fn parse_empty_list(buffer: &Vec<Token>) -> Option<(usize, Token)> {
     None
 }
 
-fn parse_dotted_cell(buffer: &Vec<Token>) -> Option<(usize, Token)> {
+fn parse_dotted_cell(buffer: &[Token]) -> Option<(usize, Token)> {
     let buffer_len = buffer.len();
     if buffer_len >= 5 {
         if let Some(tail) = buffer.get(buffer_len-5..) {
@@ -173,7 +172,7 @@ fn parse_dotted_cell(buffer: &Vec<Token>) -> Option<(usize, Token)> {
     None
 }
 
-fn parse_list(buffer: &Vec<Token>) -> Option<(usize, Token)> {
+fn parse_list(buffer: &[Token]) -> Option<(usize, Token)> {
     let buffer_len = buffer.len();
     if buffer_len > 2 && buffer[buffer_len-1] == Token::ListEnd {
         for (i, item) in buffer.iter().rev().enumerate() {
@@ -187,7 +186,7 @@ fn parse_list(buffer: &Vec<Token>) -> Option<(usize, Token)> {
     None
 }
 
-fn parse_quoted(buffer: &Vec<Token>) -> Option<(usize, Token)> {
+fn parse_quoted(buffer: &[Token]) -> Option<(usize, Token)> {
     let buffer_len = buffer.len();
     if buffer_len >= 2 && buffer[buffer_len-2] == (Token::Symbol { value: "'".to_string() }) &&
         buffer[buffer_len-1] != Token::ListStart {
@@ -202,7 +201,7 @@ fn parse_quoted(buffer: &Vec<Token>) -> Option<(usize, Token)> {
     None
 }
 
-fn parse_sharp_quote(buffer: &Vec<Token>) -> Option<(usize, Token)> {
+fn parse_sharp_quote(buffer: &[Token]) -> Option<(usize, Token)> {
     let buffer_len = buffer.len();
     if buffer_len >= 2 && buffer[buffer_len-2] == (Token::Symbol { value: "#'".to_string() }) {
         return Some((2, Token::Cons {
@@ -217,36 +216,27 @@ fn parse_sharp_quote(buffer: &Vec<Token>) -> Option<(usize, Token)> {
 }
 
 impl Parseable for Token {
-    fn propose_reduction(buffer: &Vec<Self>) -> Option<(usize, Self)> where Self: Sized {
-        parse_empty_list(&buffer)
-            .or_else(|| parse_dotted_cell(&buffer))
-            .or_else(|| parse_list(&buffer))
-            .or_else(|| parse_sharp_quote(&buffer))
+    fn propose_reduction(buffer: &[Self]) -> Option<(usize, Self)> where Self: Sized {
+        parse_empty_list(buffer)
+            .or_else(|| parse_dotted_cell(buffer))
+            .or_else(|| parse_list(buffer))
+            .or_else(|| parse_sharp_quote(buffer))
             // This one probably needs to be last so the quoted thing is fully recognized.
-            .or_else(|| parse_quoted(&buffer))
+            .or_else(|| parse_quoted(buffer))
     }
 }
 
 impl Token {
     fn is_list_start(&self) -> bool {
-        match self {
-            Token::ListStart => true,
-            _ => false,
-        }
+        matches!(self, Token::ListStart)
     }
 
     fn is_list_end(&self) -> bool {
-        match self {
-            Token::ListEnd => true,
-            _ => false,
-        }
+        matches!(self, Token::ListEnd)
     }
 
     fn is_comment(&self) -> bool {
-        match self {
-            Token::Comment => true,
-            _ => false,
-        }
+        matches!(self, Token::Comment)
     }
 }
 

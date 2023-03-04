@@ -24,7 +24,7 @@ where T: Parseable + Debug
 }
 
 fn reduce_buffer<T: Parseable + Debug>(buffer: &mut Vec<T>) -> bool {
-    if let Some((to_replace, production)) = T::propose_reduction(&buffer) {
+    if let Some((to_replace, production)) = T::propose_reduction(buffer) {
         buffer.truncate(buffer.len() - to_replace);
         buffer.push(production);
         true
@@ -34,7 +34,7 @@ fn reduce_buffer<T: Parseable + Debug>(buffer: &mut Vec<T>) -> bool {
 }
 
 pub trait Parseable {
-    fn propose_reduction(buffer: &Vec<Self>) -> Option<(usize, Self)> where Self: Sized;
+    fn propose_reduction(buffer: &[Self]) -> Option<(usize, Self)> where Self: Sized;
 }
 
 #[cfg(test)]
@@ -112,7 +112,7 @@ mod tests {
     }
 
     impl Parseable for Calculator {
-        fn propose_reduction(buffer: &Vec<Self>) -> Option<(usize, Self)> where Self: Sized {
+        fn propose_reduction(buffer: &[Self]) -> Option<(usize, Self)> where Self: Sized {
             if let Some(last) = buffer.last() {
                 if last.is_number() {
                     return Some((1, Factor(Box::new(last.clone()))))
