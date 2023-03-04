@@ -142,45 +142,66 @@ impl From<&[Token]> for Token {
     }
 }
 
+fn parse_empty_list(buffer: &Vec<Token>) -> Option<(usize, Token)> {
+    let buffer_len = buffer.len();
+    if buffer_len >= 2 {
+        if let Some(tail) = buffer.get(buffer_len-2..) {
+            if tail[0].is_list_start() && tail[1].is_list_end() {
+                return Some((2, Token::EmptyList))
+            }
+        }
+    }
+    None
+}
+
+fn parse_dotted_cell(buffer: &Vec<Token>) -> Option<(usize, Token)> {
+    let buffer_len = buffer.len();
+    if buffer_len >= 5 {
+        if let Some(tail) = buffer.get(buffer_len-5..) {
+            let dot = Token::Symbol { value: ".".to_string() };
+            if tail[0].is_list_start() && tail[2] == dot && tail[4].is_list_end() {
+                return Some((5, Token::Cons { head: Box::new(tail[1].clone()), tail: Box::new(tail[3].clone()) }))
+            }
+        }
+    }
+    None
+}
+
+fn parse_list(buffer: &Vec<Token>) -> Option<(usize, Token)> {
+    let buffer_len = buffer.len();
+    if buffer_len > 2 && buffer[buffer_len-1] == Token::ListEnd {
+        for (i, item) in buffer.iter().rev().enumerate() {
+            if *item == Token::ListStart {
+                let start = buffer_len - i;
+                let list: Token = buffer[start..buffer_len-1].into();
+                return Some((i+1, list))
+            }
+        }
+    }
+    None
+}
+
+fn parse_quoted(buffer: &Vec<Token>) -> Option<(usize, Token)> {
+    let buffer_len = buffer.len();
+    if buffer_len >= 2 && buffer[buffer_len-2] == (Token::Symbol { value: "'".to_string() }) {
+        // This one probably needs to be last so the quoted thing is fully recognized.
+        return Some((2, Token::Cons {
+            head: Box::new(Token::Symbol { value: "quote".to_string() }),
+            tail: Box::new(Token::Cons {
+                head: Box::new(buffer[buffer_len-1].clone()),
+                tail: Box::new(Token::EmptyList),
+            })
+            }))
+    }
+    None
+}
+
 impl Parseable for Token {
     fn propose_reduction(buffer: &Vec<Self>) -> Option<(usize, Self)> where Self: Sized {
-        // TODO: refactor these into smaller functions and chain them with `Option::or_else`.
-        let buffer_len = buffer.len();
-        if buffer_len >= 2 {
-            if let Some(tail) = buffer.get(buffer_len-2..) {
-                if tail[0].is_list_start() && tail[1].is_list_end() {
-                    return Some((2, Token::EmptyList))
-                }
-            }
-        }
-        if buffer_len >= 5 {
-            if let Some(tail) = buffer.get(buffer_len-5..) {
-                let dot = Token::Symbol { value: ".".to_string() };
-                if tail[0].is_list_start() && tail[2] == dot && tail[4].is_list_end() {
-                    return Some((5, Token::Cons { head: Box::new(tail[1].clone()), tail: Box::new(tail[3].clone()) }))
-                }
-            }
-        }
-        if buffer_len > 2 && buffer[buffer_len-1] == Token::ListEnd {
-            for (i, item) in buffer.iter().rev().enumerate() {
-                if *item == Token::ListStart {
-                    let start = buffer_len - i;
-                    let list: Token = buffer[start..buffer_len-1].into();
-                    return Some((i+1, list))
-                }
-            }
-        }
-        if buffer_len >= 2 && buffer[buffer_len-2] == (Token::Symbol { value: "'".to_string() }) {
-            // This one probably needs to be last so the quoted thing is fully recognized.
-            return Some((2, Token::Cons {
-                head: Box::new(Token::Symbol { value: "quote".to_string() }),
-                tail: Box::new(Token::Cons {
-                    head: Box::new(buffer[buffer_len-1].clone()),
-                    tail: Box::new(Token::EmptyList),
-                })
-             }))
-        }
-        None
+        parse_empty_list(&buffer)
+            .or_else(|| parse_dotted_cell(&buffer))
+            .or_else(|| parse_list(&buffer))
+            .or_else(|| parse_quoted(&buffer))
     }
 }
 
@@ -200,27 +221,6 @@ impl Token {
     }
 }
 
-fn is_list_end(opt: Option<&Result<Token>>) -> bool {
-    if let Some(r) = opt {
-        if let Ok(t) = r {
-            return *t == Token::ListEnd
-        }
-    } 
-    false
-}
-
-fn read_list_end(tokens: &mut Peekable<impl Iterator<Item = Result<Token>>>) -> Result<Token> {
-    if let Some(head) = tokens.next() {
-        let head = head?;
-        if head == Token::ListEnd {
-            return Ok(Token::EmptyList)
-        // } else if head == (Token::Symbol { value: ".".to_string() }) {
-            // return Ok(Token::Cons { head, tail: () })
-        }
-    }
-    Err(Error::TokenParseError("()".to_string()))
-}
-
 pub fn read_lisp<R: Read>(reader: &mut R) -> Result<Vec<Token>> {
     let tokens = scan(reader)?
         .map(|s| {
@@ -233,20 +233,6 @@ pub fn read_lisp<R: Read>(reader: &mut R) -> Result<Vec<Token>> {
     let parser = Parser::new(tokens);
 
     let result = parser.parse();
-
-    // loop {
-    //     if let Some(token) = tokens.next() {
-    //         let token = token?;
-    //         if token == Token::ListStart {
-    //             let list_token = read_list_end(&mut tokens)?;
-    //             buffer.push(list_token);
-    //         } else {
-    //             buffer.push(token);
-    //         }
-    //     } else {
-    //         break;
-    //     }
-    // }
 
     Ok(result)
 }
