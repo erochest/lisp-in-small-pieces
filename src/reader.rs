@@ -196,11 +196,26 @@ fn parse_quoted(buffer: &Vec<Token>) -> Option<(usize, Token)> {
     None
 }
 
+fn parse_sharp_quote(buffer: &Vec<Token>) -> Option<(usize, Token)> {
+    let buffer_len = buffer.len();
+    if buffer_len >= 2 && buffer[buffer_len-2] == (Token::Symbol { value: "#'".to_string() }) {
+        return Some((2, Token::Cons {
+            head: Box::new(Token::Symbol { value: "function".to_string() }),
+            tail: Box::new(Token::Cons {
+                head: Box::new(buffer[buffer_len-1].clone()),
+                tail: Box::new(Token::EmptyList),
+            })
+        }))
+    }
+    None
+}
+
 impl Parseable for Token {
     fn propose_reduction(buffer: &Vec<Self>) -> Option<(usize, Self)> where Self: Sized {
         parse_empty_list(&buffer)
             .or_else(|| parse_dotted_cell(&buffer))
             .or_else(|| parse_list(&buffer))
+            .or_else(|| parse_sharp_quote(&buffer))
             // This one probably needs to be last so the quoted thing is fully recognized.
             .or_else(|| parse_quoted(&buffer))
     }
@@ -426,6 +441,10 @@ mod tests {
         ].into(),
     ].into());
 
-// TODO: parse a quoted function name (`#'foobar`)
+    test_parse_input!(parse_quoted_function, "#'foo-bar", vec![
+        Symbol { value: "function".to_string() },
+        Symbol { value: "foo-bar".to_string() },
+    ].into());
+
 // TODO: parse comments
 }
