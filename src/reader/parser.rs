@@ -1,16 +1,19 @@
 use std::fmt::Debug;
 
-
 pub struct Parser<'a, T> {
     input: Box<dyn Iterator<Item = T> + 'a>,
     buffer: Vec<T>,
 }
 
 impl<'a, T> Parser<'a, T>
-where T: Parseable + Debug
+where
+    T: Parseable + Debug,
 {
     pub fn new<I: Iterator<Item = T> + 'a>(input: I) -> Self {
-        Parser { input: Box::new(input), buffer: Vec::new() }
+        Parser {
+            input: Box::new(input),
+            buffer: Vec::new(),
+        }
     }
 
     pub fn parse(mut self) -> Vec<T> {
@@ -34,12 +37,14 @@ fn reduce_buffer<T: Parseable + Debug>(buffer: &mut Vec<T>) -> bool {
 }
 
 pub trait Parseable {
-    fn propose_reduction(buffer: &[Self]) -> Option<(usize, Self)> where Self: Sized;
+    fn propose_reduction(buffer: &[Self]) -> Option<(usize, Self)>
+    where
+        Self: Sized;
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{Parser, Parseable};
+    use super::{Parseable, Parser};
 
     use pretty_assertions::assert_eq;
 
@@ -98,43 +103,49 @@ mod tests {
 
         fn is_term_op(&self) -> bool {
             match self {
-                Multiply|Divide => true,
+                Multiply | Divide => true,
                 _ => false,
             }
         }
 
         fn is_expr_op(&self) -> bool {
             match self {
-                Plus|Minus => true,
+                Plus | Minus => true,
                 _ => false,
             }
         }
     }
 
     impl Parseable for Calculator {
-        fn propose_reduction(buffer: &[Self]) -> Option<(usize, Self)> where Self: Sized {
+        fn propose_reduction(buffer: &[Self]) -> Option<(usize, Self)>
+        where
+            Self: Sized,
+        {
             if let Some(last) = buffer.last() {
                 if last.is_number() {
-                    return Some((1, Factor(Box::new(last.clone()))))
+                    return Some((1, Factor(Box::new(last.clone()))));
                 }
             }
             if buffer.len() >= 3 {
-                if let Some(end) = buffer.get(buffer.len()-3..buffer.len()) {
+                if let Some(end) = buffer.get(buffer.len() - 3..buffer.len()) {
                     if end[0].is_factor() && end[1].is_term_op() && end[2].is_factor() {
                         let f1 = end[0].clone();
                         let op = end[1].clone();
                         let f2 = end[2].clone();
-                        return Some((3, Term(Box::new(f1), Box::new(op), Box::new(f2))))
+                        return Some((3, Term(Box::new(f1), Box::new(op), Box::new(f2))));
                     }
-                    if end[0].is_term() && (end[1].is_expr_op() || end[1].is_term()) && end[2].is_term() {
+                    if end[0].is_term()
+                        && (end[1].is_expr_op() || end[1].is_term())
+                        && end[2].is_term()
+                    {
                         let f1 = end[0].clone();
                         let op = end[1].clone();
                         let f2 = end[2].clone();
-                        return Some((3, Expr(Box::new(f1), Box::new(op), Box::new(f2))))
+                        return Some((3, Expr(Box::new(f1), Box::new(op), Box::new(f2))));
                     }
                     if end[0] == LParen && end[1].is_expr() && end[2] == RParen {
                         let expr = end[1].clone();
-                        return Some((3, Factor(Box::new(expr))))
+                        return Some((3, Factor(Box::new(expr))));
                     }
                 }
             }
@@ -175,10 +186,13 @@ mod tests {
         let result = parser.parse();
 
         assert_eq!(result.len(), 1);
-        assert_eq!(result[0], Term(
-            Box::new(Factor(Box::new(Number(13)))),
-            Box::new(Multiply),
-            Box::new(Factor(Box::new(Number(42)))),
-        ));
+        assert_eq!(
+            result[0],
+            Term(
+                Box::new(Factor(Box::new(Number(13)))),
+                Box::new(Multiply),
+                Box::new(Factor(Box::new(Number(42)))),
+            )
+        );
     }
 }

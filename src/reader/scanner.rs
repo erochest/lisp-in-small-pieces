@@ -88,18 +88,18 @@ impl Iterator for Scanner {
         if let Some(peek) = self.buffer.get(self.i) {
             match *peek {
                 '\'' => self.i += 1,
-                '('  => self.i += 1,
-                ')'  => self.i += 1,
-                '#'  => {
-                    if self.buffer.get(self.i+1) == Some(&'\'') {
+                '(' => self.i += 1,
+                ')' => self.i += 1,
+                '#' => {
+                    if self.buffer.get(self.i + 1) == Some(&'\'') {
                         self.i += 2;
                     } else {
                         self.i += 1;
                     }
-                },
-                ';'  => self.skip_comment(),
-                '"'  => self.skip_string(),
-                _    => self.skip_to_end(),
+                }
+                ';' => self.skip_comment(),
+                '"' => self.skip_string(),
+                _ => self.skip_to_end(),
             }
         }
 
@@ -206,19 +206,60 @@ mod tests {
         };
     }
 
-    test_scan!(test_skips_initial_whitespace, "    foobar", 1, "foobar".to_string());
-    test_scan!(test_scans_strings, " \"this is a string\" ", 1, "\"this is a string\"".to_string());
+    test_scan!(
+        test_skips_initial_whitespace,
+        "    foobar",
+        1,
+        "foobar".to_string()
+    );
+    test_scan!(
+        test_scans_strings,
+        " \"this is a string\" ",
+        1,
+        "\"this is a string\"".to_string()
+    );
     test_scan!(test_scans_empty_strings, " \"\" ", 1, "\"\"".to_string());
-    test_scan!(test_scans_strings_with_escapes, " \"this string \\\"contains\\\" a string\" ", 1, "\"this string \\\"contains\\\" a string\"".to_string());
+    test_scan!(
+        test_scans_strings_with_escapes,
+        " \"this string \\\"contains\\\" a string\" ",
+        1,
+        "\"this string \\\"contains\\\" a string\"".to_string()
+    );
 
     test_scan!(test_list_start, " ( ", 1, "(".to_string());
     test_scan!(test_list_end, " ) ", 1, ")".to_string());
     test_scan!(test_empty_list, " () ", 2, "(".to_string(), ")".to_string());
-    test_scan!(test_integer_list_end, " 42) ", 2, "42".to_string(), ")".to_string());
-    test_scan!(test_symbol_list_end_list_end, " foo-bar))", 3, "foo-bar".to_string(), ")".to_string(), ")".to_string());
-    test_scan!(test_list_symbol, "(foo-bar)", 3, "(".to_string(), "foo-bar".to_string(), ")".to_string());
+    test_scan!(
+        test_integer_list_end,
+        " 42) ",
+        2,
+        "42".to_string(),
+        ")".to_string()
+    );
+    test_scan!(
+        test_symbol_list_end_list_end,
+        " foo-bar))",
+        3,
+        "foo-bar".to_string(),
+        ")".to_string(),
+        ")".to_string()
+    );
+    test_scan!(
+        test_list_symbol,
+        "(foo-bar)",
+        3,
+        "(".to_string(),
+        "foo-bar".to_string(),
+        ")".to_string()
+    );
     test_scan!(test_quote, "'foo-bar", 2, "'", "foo-bar");
     test_scan!(test_sharp_quote, "#'foo-bar", 2, "#'", "foo-bar");
-    test_scan!(test_comments, "something ; comment\nsomething-else", 3, "something", "; comment", "something-else");
-
+    test_scan!(
+        test_comments,
+        "something ; comment\nsomething-else",
+        3,
+        "something",
+        "; comment",
+        "something-else"
+    );
 }

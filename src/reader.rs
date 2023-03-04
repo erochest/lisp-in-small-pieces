@@ -105,13 +105,18 @@ impl From<f64> for Token {
 
 impl From<(isize, isize)> for Token {
     fn from(value: (isize, isize)) -> Self {
-        Token::Rational { numerator: value.0, denominator: value.1 }
+        Token::Rational {
+            numerator: value.0,
+            denominator: value.1,
+        }
     }
 }
 
 impl From<&str> for Token {
     fn from(value: &str) -> Self {
-        Token::String { value: value.to_string() }
+        Token::String {
+            value: value.to_string(),
+        }
     }
 }
 
@@ -150,9 +155,9 @@ impl From<&[Token]> for Token {
 fn parse_empty_list(buffer: &[Token]) -> Option<(usize, Token)> {
     let buffer_len = buffer.len();
     if buffer_len >= 2 {
-        if let Some(tail) = buffer.get(buffer_len-2..) {
+        if let Some(tail) = buffer.get(buffer_len - 2..) {
             if tail[0].is_list_start() && tail[1].is_list_end() {
-                return Some((2, Token::EmptyList))
+                return Some((2, Token::EmptyList));
             }
         }
     }
@@ -162,10 +167,18 @@ fn parse_empty_list(buffer: &[Token]) -> Option<(usize, Token)> {
 fn parse_dotted_cell(buffer: &[Token]) -> Option<(usize, Token)> {
     let buffer_len = buffer.len();
     if buffer_len >= 5 {
-        if let Some(tail) = buffer.get(buffer_len-5..) {
-            let dot = Token::Symbol { value: ".".to_string() };
+        if let Some(tail) = buffer.get(buffer_len - 5..) {
+            let dot = Token::Symbol {
+                value: ".".to_string(),
+            };
             if tail[0].is_list_start() && tail[2] == dot && tail[4].is_list_end() {
-                return Some((5, Token::Cons { head: Box::new(tail[1].clone()), tail: Box::new(tail[3].clone()) }))
+                return Some((
+                    5,
+                    Token::Cons {
+                        head: Box::new(tail[1].clone()),
+                        tail: Box::new(tail[3].clone()),
+                    },
+                ));
             }
         }
     }
@@ -174,12 +187,12 @@ fn parse_dotted_cell(buffer: &[Token]) -> Option<(usize, Token)> {
 
 fn parse_list(buffer: &[Token]) -> Option<(usize, Token)> {
     let buffer_len = buffer.len();
-    if buffer_len > 2 && buffer[buffer_len-1] == Token::ListEnd {
+    if buffer_len > 2 && buffer[buffer_len - 1] == Token::ListEnd {
         for (i, item) in buffer.iter().rev().enumerate() {
             if *item == Token::ListStart {
                 let start = buffer_len - i;
-                let list: Token = buffer[start..buffer_len-1].into();
-                return Some((i+1, list))
+                let list: Token = buffer[start..buffer_len - 1].into();
+                return Some((i + 1, list));
             }
         }
     }
@@ -188,35 +201,58 @@ fn parse_list(buffer: &[Token]) -> Option<(usize, Token)> {
 
 fn parse_quoted(buffer: &[Token]) -> Option<(usize, Token)> {
     let buffer_len = buffer.len();
-    if buffer_len >= 2 && buffer[buffer_len-2] == (Token::Symbol { value: "'".to_string() }) &&
-        buffer[buffer_len-1] != Token::ListStart {
-        return Some((2, Token::Cons {
-            head: Box::new(Token::Symbol { value: "quote".to_string() }),
-            tail: Box::new(Token::Cons {
-                head: Box::new(buffer[buffer_len-1].clone()),
-                tail: Box::new(Token::EmptyList),
+    if buffer_len >= 2
+        && buffer[buffer_len - 2]
+            == (Token::Symbol {
+                value: "'".to_string(),
             })
-            }))
+        && buffer[buffer_len - 1] != Token::ListStart
+    {
+        return Some((
+            2,
+            Token::Cons {
+                head: Box::new(Token::Symbol {
+                    value: "quote".to_string(),
+                }),
+                tail: Box::new(Token::Cons {
+                    head: Box::new(buffer[buffer_len - 1].clone()),
+                    tail: Box::new(Token::EmptyList),
+                }),
+            },
+        ));
     }
     None
 }
 
 fn parse_sharp_quote(buffer: &[Token]) -> Option<(usize, Token)> {
     let buffer_len = buffer.len();
-    if buffer_len >= 2 && buffer[buffer_len-2] == (Token::Symbol { value: "#'".to_string() }) {
-        return Some((2, Token::Cons {
-            head: Box::new(Token::Symbol { value: "function".to_string() }),
-            tail: Box::new(Token::Cons {
-                head: Box::new(buffer[buffer_len-1].clone()),
-                tail: Box::new(Token::EmptyList),
+    if buffer_len >= 2
+        && buffer[buffer_len - 2]
+            == (Token::Symbol {
+                value: "#'".to_string(),
             })
-        }))
+    {
+        return Some((
+            2,
+            Token::Cons {
+                head: Box::new(Token::Symbol {
+                    value: "function".to_string(),
+                }),
+                tail: Box::new(Token::Cons {
+                    head: Box::new(buffer[buffer_len - 1].clone()),
+                    tail: Box::new(Token::EmptyList),
+                }),
+            },
+        ));
     }
     None
 }
 
 impl Parseable for Token {
-    fn propose_reduction(buffer: &[Self]) -> Option<(usize, Self)> where Self: Sized {
+    fn propose_reduction(buffer: &[Self]) -> Option<(usize, Self)>
+    where
+        Self: Sized,
+    {
         parse_empty_list(buffer)
             .or_else(|| parse_dotted_cell(buffer))
             .or_else(|| parse_list(buffer))
@@ -297,26 +333,38 @@ mod tests {
 
     #[test]
     fn from_int_pair() {
-        assert_eq!(Rational { numerator: 13, denominator: 74 }, (13, 74).into());
+        assert_eq!(
+            Rational {
+                numerator: 13,
+                denominator: 74
+            },
+            (13, 74).into()
+        );
     }
 
     #[test]
     fn from_str() {
-        assert_eq!(String { value: "a string".to_string() }, "a string".into());
+        assert_eq!(
+            String {
+                value: "a string".to_string()
+            },
+            "a string".into()
+        );
     }
 
     #[test]
     fn from_string() {
-        assert_eq!(String { value: "another string".to_string() }, "another string".to_string().into());
+        assert_eq!(
+            String {
+                value: "another string".to_string()
+            },
+            "another string".to_string().into()
+        );
     }
 
     #[test]
     fn from_token_vec() {
-        let input: Vec<Token> = vec![
-            42.into(),
-            "+".into(),
-            99.into(),
-        ];
+        let input: Vec<Token> = vec![42.into(), "+".into(), 99.into()];
         let expected = Cons {
             head: Box::new(42.into()),
             tail: Box::new(Cons {
@@ -324,7 +372,7 @@ mod tests {
                 tail: Box::new(Cons {
                     head: Box::new(99.into()),
                     tail: Box::new(EmptyList),
-                })
+                }),
             }),
         };
         assert_eq!(expected, input.into());
@@ -332,11 +380,7 @@ mod tests {
 
     #[test]
     fn from_token_slice() {
-        let input: &[Token] = &[
-            42.into(),
-            "+".into(),
-            99.into(),
-        ];
+        let input: &[Token] = &[42.into(), "+".into(), 99.into()];
         let expected = Cons {
             head: Box::new(42.into()),
             tail: Box::new(Cons {
@@ -344,7 +388,7 @@ mod tests {
                 tail: Box::new(Cons {
                     head: Box::new(99.into()),
                     tail: Box::new(EmptyList),
-                })
+                }),
             }),
         };
         assert_eq!(expected, input.into());
@@ -424,37 +468,94 @@ mod tests {
         Integer { value: 99 }
     );
     test_parse_input!(parse_empty_cons, "()", EmptyList);
-    test_parse_input!(parse_dotted_cons, "(13 . 42)", Cons { head: Box::new(Integer { value: 13 }), tail: Box::new(Integer { value: 42 })});
-    test_parse_input!(parse_list, "(42 43 44)", vec![Into::<Token>::into(42isize), 43.into(), 44.into()].into());
-    test_parse_input!(parse_embedded_lists, "(+ 7 (- 10 3))",
+    test_parse_input!(
+        parse_dotted_cons,
+        "(13 . 42)",
+        Cons {
+            head: Box::new(Integer { value: 13 }),
+            tail: Box::new(Integer { value: 42 })
+        }
+    );
+    test_parse_input!(
+        parse_list,
+        "(42 43 44)",
+        vec![Into::<Token>::into(42isize), 43.into(), 44.into()].into()
+    );
+    test_parse_input!(
+        parse_embedded_lists,
+        "(+ 7 (- 10 3))",
         vec![
-            Symbol { value: "+".to_string() },
+            Symbol {
+                value: "+".to_string()
+            },
             7isize.into(),
-            vec![Symbol { value: "-".to_string() }, Into::<Token>::into(10isize), 3.into()].into(),
-        ].into()
+            vec![
+                Symbol {
+                    value: "-".to_string()
+                },
+                Into::<Token>::into(10isize),
+                3.into()
+            ]
+            .into(),
+        ]
+        .into()
     );
 
-    test_parse_input!(parse_quoted_symbol, "'foobar", vec![
-        Symbol { value: "quote".to_string() },
-        Symbol { value: "foobar".to_string() },
-    ].into());
-
-    test_parse_input!(parse_quoted_list, "'(+ 1 3)", vec![
-        Symbol { value: "quote".to_string() },
+    test_parse_input!(
+        parse_quoted_symbol,
+        "'foobar",
         vec![
-            Symbol { value: "+".to_string() },
-            1.into(),
-            3.into(),
-        ].into(),
-    ].into());
+            Symbol {
+                value: "quote".to_string()
+            },
+            Symbol {
+                value: "foobar".to_string()
+            },
+        ]
+        .into()
+    );
 
-    test_parse_input!(parse_quoted_function, "#'foo-bar", vec![
-        Symbol { value: "function".to_string() },
-        Symbol { value: "foo-bar".to_string() },
-    ].into());
+    test_parse_input!(
+        parse_quoted_list,
+        "'(+ 1 3)",
+        vec![
+            Symbol {
+                value: "quote".to_string()
+            },
+            vec![
+                Symbol {
+                    value: "+".to_string()
+                },
+                1.into(),
+                3.into(),
+            ]
+            .into(),
+        ]
+        .into()
+    );
 
-    test_parse_input!(parse_comments, "something ; commented\nsomething-else",
-        Symbol { value: "something".to_string() },
-        Symbol { value: "something-else".to_string() }
+    test_parse_input!(
+        parse_quoted_function,
+        "#'foo-bar",
+        vec![
+            Symbol {
+                value: "function".to_string()
+            },
+            Symbol {
+                value: "foo-bar".to_string()
+            },
+        ]
+        .into()
+    );
+
+    test_parse_input!(
+        parse_comments,
+        "something ; commented\nsomething-else",
+        Symbol {
+            value: "something".to_string()
+        },
+        Symbol {
+            value: "something-else".to_string()
+        }
     );
 }
