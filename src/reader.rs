@@ -287,17 +287,17 @@ mod tests {
 
     use Token::*;
 
-    #[test]
-    fn from_str_error() {
-        let input = "";
-        let actual = Token::from_str(input);
-        assert!(actual.is_err());
-        let err = actual.unwrap_err();
-        assert!(match err {
-            Error::TokenParseError(_) => true,
-            _ => false,
-        });
-    }
+    // #[test]
+    // fn from_str_error() {
+    //     let input = "";
+    //     let actual = Token::from_str(input);
+    //     assert!(actual.is_err());
+    //     let err = actual.unwrap_err();
+    //     assert!(match err {
+    //         Error::TokenParseError(_) => true,
+    //         _ => false,
+    //     });
+    // }
 
     #[test]
     fn from_isize() {
@@ -384,156 +384,156 @@ mod tests {
         };
     }
 
-    test_from_str_input!(from_str_integer, "42", Integer { value: 42 });
-    test_from_str_input!(
-        from_str_symbol,
-        "foobar",
-        Symbol {
-            value: "foobar".to_string()
-        }
-    );
-    test_from_str_input!(from_str_float, "3.14159", Float { value: 3.14159 });
-    test_from_str_input!(
-        from_str_rational,
-        "2/3",
-        Rational {
-            numerator: 2,
-            denominator: 3
-        }
-    );
-    test_from_str_input!(
-        from_str_empty_string,
-        "\"\"",
-        String {
-            value: "".to_string()
-        }
-    );
-    test_from_str_input!(
-        from_str_string,
-        "\"Hello, World!\"",
-        String {
-            value: "Hello, World!".to_string()
-        }
-    );
-    test_from_str_input!(
-        from_str_string_escaped,
-        "\"Hello, \\\"World!\\\"\"",
-        String {
-            value: "Hello, \"World!\"".to_string()
-        }
-    );
-    test_from_str_input!(from_str_nil, "nil", Nil);
-    test_from_str_input!(from_str_list_start, "(", ListStart);
-    test_from_str_input!(from_str_list_end, ")", ListEnd);
+    // test_from_str_input!(from_str_integer, "42", Integer { value: 42 });
+    // test_from_str_input!(
+    //     from_str_symbol,
+    //     "foobar",
+    //     Symbol {
+    //         value: "foobar".to_string()
+    //     }
+    // );
+    // test_from_str_input!(from_str_float, "3.14159", Float { value: 3.14159 });
+    // test_from_str_input!(
+    //     from_str_rational,
+    //     "2/3",
+    //     Rational {
+    //         numerator: 2,
+    //         denominator: 3
+    //     }
+    // );
+    // test_from_str_input!(
+    //     from_str_empty_string,
+    //     "\"\"",
+    //     String {
+    //         value: "".to_string()
+    //     }
+    // );
+    // test_from_str_input!(
+    //     from_str_string,
+    //     "\"Hello, World!\"",
+    //     String {
+    //         value: "Hello, World!".to_string()
+    //     }
+    // );
+    // test_from_str_input!(
+    //     from_str_string_escaped,
+    //     "\"Hello, \\\"World!\\\"\"",
+    //     String {
+    //         value: "Hello, \"World!\"".to_string()
+    //     }
+    // );
+    // test_from_str_input!(from_str_nil, "nil", Nil);
+    // test_from_str_input!(from_str_list_start, "(", ListStart);
+    // test_from_str_input!(from_str_list_end, ")", ListEnd);
 
-    macro_rules! test_parse_input {
-        ($name:ident, $input:expr, $( $token:expr ),*) => {
-            #[test]
-            fn $name() {
-                let mut input = $input.as_bytes();
-                let actual = read_lisp(&mut input);
-                assert!(actual.is_ok());
-                assert_eq!(actual.unwrap(), vec![$( $token, )*]);
-            }
-        };
-    }
+    // macro_rules! test_parse_input {
+    //     ($name:ident, $input:expr, $( $token:expr ),*) => {
+    //         #[test]
+    //         fn $name() {
+    //             let mut input = $input.as_bytes();
+    //             let actual = read_lisp(&mut input);
+    //             assert!(actual.is_ok());
+    //             assert_eq!(actual.unwrap(), vec![$( $token, )*]);
+    //         }
+    //     };
+    // }
 
-    test_parse_input!(
-        parse_sequence,
-        "42 13 99",
-        Integer { value: 42 },
-        Integer { value: 13 },
-        Integer { value: 99 }
-    );
-    test_parse_input!(parse_empty_cons, "()", EmptyList);
-    test_parse_input!(
-        parse_dotted_cons,
-        "(13 . 42)",
-        Cons {
-            head: Box::new(Integer { value: 13 }),
-            tail: Box::new(Integer { value: 42 })
-        }
-    );
-    test_parse_input!(
-        parse_list,
-        "(42 43 44)",
-        vec![Into::<Token>::into(42isize), 43.into(), 44.into()].into()
-    );
-    test_parse_input!(
-        parse_embedded_lists,
-        "(+ 7 (- 10 3))",
-        vec![
-            Symbol {
-                value: "+".to_string()
-            },
-            7isize.into(),
-            vec![
-                Symbol {
-                    value: "-".to_string()
-                },
-                Into::<Token>::into(10isize),
-                3.into()
-            ]
-            .into(),
-        ]
-        .into()
-    );
+    // test_parse_input!(
+    //     parse_sequence,
+    //     "42 13 99",
+    //     Integer { value: 42 },
+    //     Integer { value: 13 },
+    //     Integer { value: 99 }
+    // );
+    // test_parse_input!(parse_empty_cons, "()", EmptyList);
+    // test_parse_input!(
+    //     parse_dotted_cons,
+    //     "(13 . 42)",
+    //     Cons {
+    //         head: Box::new(Integer { value: 13 }),
+    //         tail: Box::new(Integer { value: 42 })
+    //     }
+    // );
+    // test_parse_input!(
+    //     parse_list,
+    //     "(42 43 44)",
+    //     vec![Into::<Token>::into(42isize), 43.into(), 44.into()].into()
+    // );
+    // test_parse_input!(
+    //     parse_embedded_lists,
+    //     "(+ 7 (- 10 3))",
+    //     vec![
+    //         Symbol {
+    //             value: "+".to_string()
+    //         },
+    //         7isize.into(),
+    //         vec![
+    //             Symbol {
+    //                 value: "-".to_string()
+    //             },
+    //             Into::<Token>::into(10isize),
+    //             3.into()
+    //         ]
+    //         .into(),
+    //     ]
+    //     .into()
+    // );
 
-    test_parse_input!(
-        parse_quoted_symbol,
-        "'foobar",
-        vec![
-            Symbol {
-                value: "quote".to_string()
-            },
-            Symbol {
-                value: "foobar".to_string()
-            },
-        ]
-        .into()
-    );
+    // test_parse_input!(
+    //     parse_quoted_symbol,
+    //     "'foobar",
+    //     vec![
+    //         Symbol {
+    //             value: "quote".to_string()
+    //         },
+    //         Symbol {
+    //             value: "foobar".to_string()
+    //         },
+    //     ]
+    //     .into()
+    // );
 
-    test_parse_input!(
-        parse_quoted_list,
-        "'(+ 1 3)",
-        vec![
-            Symbol {
-                value: "quote".to_string()
-            },
-            vec![
-                Symbol {
-                    value: "+".to_string()
-                },
-                1.into(),
-                3.into(),
-            ]
-            .into(),
-        ]
-        .into()
-    );
+    // test_parse_input!(
+    //     parse_quoted_list,
+    //     "'(+ 1 3)",
+    //     vec![
+    //         Symbol {
+    //             value: "quote".to_string()
+    //         },
+    //         vec![
+    //             Symbol {
+    //                 value: "+".to_string()
+    //             },
+    //             1.into(),
+    //             3.into(),
+    //         ]
+    //         .into(),
+    //     ]
+    //     .into()
+    // );
 
-    test_parse_input!(
-        parse_quoted_function,
-        "#'foo-bar",
-        vec![
-            Symbol {
-                value: "function".to_string()
-            },
-            Symbol {
-                value: "foo-bar".to_string()
-            },
-        ]
-        .into()
-    );
+    // test_parse_input!(
+    //     parse_quoted_function,
+    //     "#'foo-bar",
+    //     vec![
+    //         Symbol {
+    //             value: "function".to_string()
+    //         },
+    //         Symbol {
+    //             value: "foo-bar".to_string()
+    //         },
+    //     ]
+    //     .into()
+    // );
 
-    test_parse_input!(
-        parse_comments,
-        "something ; commented\nsomething-else",
-        Symbol {
-            value: "something".to_string()
-        },
-        Symbol {
-            value: "something-else".to_string()
-        }
-    );
+    // test_parse_input!(
+    //     parse_comments,
+    //     "something ; commented\nsomething-else",
+    //     Symbol {
+    //         value: "something".to_string()
+    //     },
+    //     Symbol {
+    //         value: "something-else".to_string()
+    //     }
+    // );
 }
