@@ -1,6 +1,7 @@
 use std::{io::Read, str::FromStr};
 
 use lazy_static::lazy_static;
+use nom::Finish;
 use regex::Regex;
 use serde::Serialize;
 
@@ -11,83 +12,60 @@ mod scanner;
 
 use crate::reader::parser::Parseable;
 use crate::reader::scanner::scan;
+use crate::token::Token;
 
-use self::parser::Parser;
+use self::parser::{parse_token, Parser};
 
 // TODO: factor out tokens and things (token, from<_>, parseable)
 // TODO: ctors of different kinds of tokens
-
-#[derive(Debug, Serialize, PartialEq, Clone)]
-#[serde(tag = "type")]
-pub enum Token {
-    Integer {
-        value: isize,
-    },
-    Float {
-        value: f64,
-    },
-    Rational {
-        numerator: isize,
-        denominator: isize,
-    },
-    String {
-        value: String,
-    },
-    Symbol {
-        value: String,
-    },
-    ListStart,
-    ListEnd,
-    EmptyList,
-    Cons {
-        head: Box<Token>,
-        tail: Box<Token>,
-    },
-    Nil,
-    Comment,
-}
 
 impl FromStr for Token {
     type Err = Error;
 
     fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
-        lazy_static! {
-            static ref RE_RATIONAL: Regex = Regex::new(r"([+-]?\d+)/(\d+)").unwrap();
-            static ref RE_STRING: Regex = Regex::new("\"((\\\\\")|[^\"]*)\"").unwrap();
-            static ref RE_ESCAPE: Regex = Regex::new(r"\\(.)").unwrap();
+        match parse_token(s).finish() {
+            Ok((_remaining, token)) => Ok(token),
+            Err(nom::error::Error { input, code }) => {
+                Err(Error::ParseError(input.to_string(), code))
+            }
         }
+        // lazy_static! {
+        //     static ref RE_RATIONAL: Regex = Regex::new(r"([+-]?\d+)/(\d+)").unwrap();
+        //     static ref RE_STRING: Regex = Regex::new("\"((\\\\\")|[^\"]*)\"").unwrap();
+        //     static ref RE_ESCAPE: Regex = Regex::new(r"\\(.)").unwrap();
+        // }
 
-        if s == "nil" {
-            Ok(Token::Nil)
-        } else if s == "(" {
-            Ok(Token::ListStart)
-        } else if s == ")" {
-            Ok(Token::ListEnd)
-        } else if s.starts_with(';') {
-            Ok(Token::Comment)
-        } else if let Ok(value) = s.parse() {
-            Ok(Token::Integer { value })
-        } else if let Ok(value) = s.parse() {
-            Ok(Token::Float { value })
-        } else if let Some(captures) = RE_RATIONAL.captures(s) {
-            let numerator = captures[1].parse()?;
-            let denominator = captures[2].parse()?;
-            Ok(Token::Rational {
-                numerator,
-                denominator,
-            })
-        } else if s.starts_with('"') {
-            let value = &s[1..s.len() - 1];
-            let value = RE_ESCAPE.replace_all(value, "$1");
-            let value = value.to_string();
-            Ok(Token::String { value })
-        } else if !s.is_empty() {
-            Ok(Token::Symbol {
-                value: s.to_string(),
-            })
-        } else {
-            Err(Error::TokenParseError(s.to_string()))
-        }
+        // if s == "nil" {
+        //     Ok(Token::Nil)
+        // } else if s == "(" {
+        //     Ok(Token::ListStart)
+        // } else if s == ")" {
+        //     Ok(Token::ListEnd)
+        // } else if s.starts_with(';') {
+        //     Ok(Token::Comment)
+        // } else if let Ok(value) = s.parse() {
+        //     Ok(Token::Integer { value })
+        // } else if let Ok(value) = s.parse() {
+        //     Ok(Token::Float { value })
+        // } else if let Some(captures) = RE_RATIONAL.captures(s) {
+        //     let numerator = captures[1].parse()?;
+        //     let denominator = captures[2].parse()?;
+        //     Ok(Token::Rational {
+        //         numerator,
+        //         denominator,
+        //     })
+        // } else if s.starts_with('"') {
+        //     let value = &s[1..s.len() - 1];
+        //     let value = RE_ESCAPE.replace_all(value, "$1");
+        //     let value = value.to_string();
+        //     Ok(Token::String { value })
+        // } else if !s.is_empty() {
+        //     Ok(Token::Symbol {
+        //         value: s.to_string(),
+        //     })
+        // } else {
+        //     Err(Error::TokenParseError(s.to_string()))
+        // }
     }
 }
 

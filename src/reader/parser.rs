@@ -1,5 +1,13 @@
 use std::fmt::Debug;
 
+use nom::IResult;
+
+use crate::token::Token;
+
+pub fn parse_token(input: &str) -> IResult<&str, Token> {
+    todo!()
+}
+
 pub struct Parser<'a, T> {
     input: Box<dyn Iterator<Item = T> + 'a>,
     buffer: Vec<T>,

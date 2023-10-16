@@ -4,6 +4,8 @@ use std::io;
 use std::num::ParseIntError;
 use std::result;
 
+use nom::error::ErrorKind;
+
 pub type Result<R> = result::Result<R, Error>;
 
 #[derive(Debug)]
@@ -12,6 +14,7 @@ pub enum Error {
     SerializationError(serde_json::Error),
     IntParseError(ParseIntError),
     TokenParseError(String),
+    ParseError(String, ErrorKind),
 }
 
 use Error::*;
@@ -23,6 +26,9 @@ impl fmt::Display for Error {
             SerializationError(ref err) => err.fmt(f),
             IntParseError(ref err) => err.fmt(f),
             TokenParseError(ref input) => write!(f, "token parsing error on {:?}", input),
+            ParseError(ref input, ref code) => {
+                write!(f, "parse error in {:?}: code {:?}", input, code)
+            }
         }
     }
 }
