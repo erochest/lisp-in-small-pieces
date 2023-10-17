@@ -4,7 +4,7 @@ use serde::Serialize;
 #[serde(tag = "type")]
 pub enum Token {
     Integer {
-        value: isize,
+        value: i64,
     },
     Float {
         value: f64,

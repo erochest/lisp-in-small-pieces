@@ -69,8 +69,8 @@ impl FromStr for Token {
     }
 }
 
-impl From<isize> for Token {
-    fn from(value: isize) -> Self {
+impl From<i64> for Token {
+    fn from(value: i64) -> Self {
         Token::Integer { value }
     }
 }
@@ -301,7 +301,7 @@ mod tests {
 
     #[test]
     fn from_isize() {
-        assert_eq!(Integer { value: 99 }, 99isize.into());
+        assert_eq!(Integer { value: 99 }, 99i64.into());
     }
 
     #[test]
@@ -384,7 +384,7 @@ mod tests {
         };
     }
 
-    // test_from_str_input!(from_str_integer, "42", Integer { value: 42 });
+    test_from_str_input!(from_str_integer, "42", Integer { value: 42 });
     // test_from_str_input!(
     //     from_str_symbol,
     //     "foobar",

@@ -1,11 +1,17 @@
 use std::fmt::Debug;
 
+use nom::character::complete::digit1;
+use nom::combinator::map_res;
+use nom::multi::many1;
+use nom::number;
 use nom::IResult;
 
 use crate::token::Token;
 
 pub fn parse_token(input: &str) -> IResult<&str, Token> {
-    todo!()
+    map_res(digit1, |input: &str| {
+        input.parse().map(|i| Token::Integer { value: i })
+    })(input)
 }
 
 pub struct Parser<'a, T> {
