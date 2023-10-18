@@ -10,11 +10,9 @@ use crate::error::{Error, Result};
 mod parser;
 mod scanner;
 
-use crate::reader::parser::Parseable;
-use crate::reader::scanner::scan;
 use crate::token::Token;
 
-use self::parser::{parse_token, Parser};
+use self::parser::parse_token;
 
 // TODO: factor out tokens and things (token, from<_>, parseable)
 // TODO: ctors of different kinds of tokens
@@ -226,19 +224,19 @@ fn parse_sharp_quote(buffer: &[Token]) -> Option<(usize, Token)> {
     None
 }
 
-impl Parseable for Token {
-    fn propose_reduction(buffer: &[Self]) -> Option<(usize, Self)>
-    where
-        Self: Sized,
-    {
-        parse_empty_list(buffer)
-            .or_else(|| parse_dotted_cell(buffer))
-            .or_else(|| parse_list(buffer))
-            .or_else(|| parse_sharp_quote(buffer))
-            // This one probably needs to be last so the quoted thing is fully recognized.
-            .or_else(|| parse_quoted(buffer))
-    }
-}
+// impl Parseable for Token {
+//     fn propose_reduction(buffer: &[Self]) -> Option<(usize, Self)>
+//     where
+//         Self: Sized,
+//     {
+//         parse_empty_list(buffer)
+//             .or_else(|| parse_dotted_cell(buffer))
+//             .or_else(|| parse_list(buffer))
+//             .or_else(|| parse_sharp_quote(buffer))
+//             // This one probably needs to be last so the quoted thing is fully recognized.
+//             .or_else(|| parse_quoted(buffer))
+//     }
+// }
 
 impl Token {
     fn is_list_start(&self) -> bool {
@@ -255,24 +253,28 @@ impl Token {
 }
 
 pub fn read_lisp<R: Read>(reader: &mut R) -> Result<Vec<Token>> {
-    let tokens = scan(reader)?
-        .map(|s| {
-            s.get_string()
-                .ok_or_else(|| Error::TokenParseError(String::new()))
-                .and_then(|s| Token::from_str(&s))
-        })
-        .filter(|r| match r {
-            Ok(ref t) => !t.is_comment(),
-            Err(_) => true,
-        })
-        .collect::<Result<Vec<_>>>()?
-        .into_iter();
-    let parser = Parser::new(tokens);
-
-    let result = parser.parse();
-
-    Ok(result)
+    todo!()
 }
+
+// pub fn read_lisp<R: Read>(reader: &mut R) -> Result<Vec<Token>> {
+//     let tokens = scan(reader)?
+//         .map(|s| {
+//             s.get_string()
+//                 .ok_or_else(|| Error::TokenParseError(String::new()))
+//                 .and_then(|s| Token::from_str(&s))
+//         })
+//         .filter(|r| match r {
+//             Ok(ref t) => !t.is_comment(),
+//             Err(_) => true,
+//         })
+//         .collect::<Result<Vec<_>>>()?
+//         .into_iter();
+//     let parser = Parser::new(tokens);
+
+//     let result = parser.parse();
+
+//     Ok(result)
+// }
 
 #[cfg(test)]
 mod tests {
@@ -282,7 +284,7 @@ mod tests {
 
     use crate::{
         error::Error,
-        reader::{read_lisp, Token},
+        reader::{Read, Token},
     };
 
     use Token::*;
@@ -385,13 +387,13 @@ mod tests {
     }
 
     test_from_str_input!(from_str_integer, "42", Integer { value: 42 });
-    // test_from_str_input!(
-    //     from_str_symbol,
-    //     "foobar",
-    //     Symbol {
-    //         value: "foobar".to_string()
-    //     }
-    // );
+    test_from_str_input!(
+        from_str_symbol,
+        "foobar",
+        Symbol {
+            value: "foobar".to_string()
+        }
+    );
     // test_from_str_input!(from_str_float, "3.14159", Float { value: 3.14159 });
     // test_from_str_input!(
     //     from_str_rational,
@@ -457,6 +459,11 @@ mod tests {
     // test_parse_input!(
     //     parse_list,
     //     "(42 43 44)",
+    //     vec![Into::<Token>::into(42isize), 43.into(), 44.into()].into()
+    // );
+    // test_parse_input!(
+    //     parse_symbol_list,
+    //     "(symbol-42 symbol-43 symbol-44)",
     //     vec![Into::<Token>::into(42isize), 43.into(), 44.into()].into()
     // );
     // test_parse_input!(
