@@ -2,19 +2,22 @@ use std::fmt::Debug;
 
 use nom::branch::alt;
 use nom::bytes::complete::is_not;
+use nom::bytes::complete::tag;
 use nom::bytes::complete::take_while1;
 use nom::character::complete::digit1;
 use nom::combinator::map;
 use nom::combinator::map_res;
+use nom::combinator::opt;
 use nom::multi::many1;
 use nom::number;
+use nom::sequence::tuple;
 use nom::IResult;
 use nom::{Map, Parser};
 
 use crate::token::Token;
 
 pub fn parse_token(input: &str) -> IResult<&str, Token> {
-    alt((integer, symbol))(input)
+    alt((float, integer, symbol))(input)
 }
 
 fn integer(input: &str) -> IResult<&str, Token> {
@@ -28,6 +31,34 @@ fn symbol(input: &str) -> IResult<&str, Token> {
         value: input.to_string(),
     })
     .parse(input)
+}
+
+fn float(input: &str) -> IResult<&str, Token> {
+    map_res(
+        tuple((
+            digit1,
+            tag("."),
+            digit1,
+            opt(tuple((
+                alt((tag("e"), tag("E"))),
+                opt(alt((tag("+"), tag("-")))),
+                digit1,
+            ))),
+        )),
+        |(a, _, b, c)| {
+            let mut s = String::from(a);
+            s.push('.');
+            s.push_str(b);
+            if let Some((_, sign, exp)) = c {
+                s.push('e');
+                if let Some(sign) = sign {
+                    s.push_str(sign);
+                }
+                s.push_str(exp);
+            }
+            s.parse().map(|f| Token::Float { value: f })
+        },
+    )(input)
 }
 
 // pub struct Parser<'a, T> {

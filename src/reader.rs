@@ -394,7 +394,7 @@ mod tests {
             value: "foobar".to_string()
         }
     );
-    // test_from_str_input!(from_str_float, "3.14159", Float { value: 3.14159 });
+    test_from_str_input!(from_str_float, "3.14159", Float { value: 3.14159 });
     // test_from_str_input!(
     //     from_str_rational,
     //     "2/3",
