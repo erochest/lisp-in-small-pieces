@@ -79,8 +79,8 @@ impl From<f64> for Token {
     }
 }
 
-impl From<(isize, isize)> for Token {
-    fn from(value: (isize, isize)) -> Self {
+impl From<(i64, i64)> for Token {
+    fn from(value: (i64, i64)) -> Self {
         Token::Rational {
             numerator: value.0,
             denominator: value.1,
@@ -302,7 +302,7 @@ mod tests {
     // }
 
     #[test]
-    fn from_isize() {
+    fn from_i64() {
         assert_eq!(Integer { value: 99 }, 99i64.into());
     }
 
