@@ -395,14 +395,14 @@ mod tests {
         }
     );
     test_from_str_input!(from_str_float, "3.14159", Float { value: 3.14159 });
-    // test_from_str_input!(
-    //     from_str_rational,
-    //     "2/3",
-    //     Rational {
-    //         numerator: 2,
-    //         denominator: 3
-    //     }
-    // );
+    test_from_str_input!(
+        from_str_rational,
+        "2/3",
+        Rational {
+            numerator: 2,
+            denominator: 3
+        }
+    );
     // test_from_str_input!(
     //     from_str_empty_string,
     //     "\"\"",

@@ -4,33 +4,35 @@ use nom::branch::alt;
 use nom::bytes::complete::is_not;
 use nom::bytes::complete::tag;
 use nom::bytes::complete::take_while1;
+use nom::character::complete::char;
 use nom::character::complete::digit1;
 use nom::combinator::map;
 use nom::combinator::map_res;
 use nom::combinator::opt;
+use nom::error::ErrorKind;
 use nom::multi::many1;
 use nom::number;
 use nom::sequence::tuple;
-use nom::IResult;
-use nom::{Map, Parser};
+use nom::Err;
+use nom::{IResult, Parser};
 
 use crate::token::Token;
 
 pub fn parse_token(input: &str) -> IResult<&str, Token> {
-    alt((float, integer, symbol))(input)
+    alt((rational, float, integer, symbol))(input)
 }
 
-fn integer(input: &str) -> IResult<&str, Token> {
-    map_res(digit1, |input: &str| {
-        input.parse().map(|i| Token::Integer { value: i })
+fn rational(input: &str) -> IResult<&str, Token> {
+    map_res(tuple((integer, char('/'), integer)), |(n, _, d)| {
+        if let (Token::Integer { value: n }, Token::Integer { value: d }) = (n, d) {
+            Ok(Token::Rational {
+                numerator: n,
+                denominator: d,
+            })
+        } else {
+            Err(Err::Error((input, ErrorKind::Fail)))
+        }
     })(input)
-}
-
-fn symbol(input: &str) -> IResult<&str, Token> {
-    map(is_not(" \t\n\r()"), |input: &str| Token::Symbol {
-        value: input.to_string(),
-    })
-    .parse(input)
 }
 
 fn float(input: &str) -> IResult<&str, Token> {
@@ -59,6 +61,19 @@ fn float(input: &str) -> IResult<&str, Token> {
             s.parse().map(|f| Token::Float { value: f })
         },
     )(input)
+}
+
+fn integer(input: &str) -> IResult<&str, Token> {
+    map_res(digit1, |input: &str| {
+        input.parse().map(|i| Token::Integer { value: i })
+    })(input)
+}
+
+fn symbol(input: &str) -> IResult<&str, Token> {
+    map(is_not(" \t\n\r()"), |input: &str| Token::Symbol {
+        value: input.to_string(),
+    })
+    .parse(input)
 }
 
 // pub struct Parser<'a, T> {
