@@ -1,17 +1,21 @@
 use std::fmt::Debug;
 
 use nom::branch::alt;
+use nom::bytes::complete::escaped_transform;
 use nom::bytes::complete::is_not;
 use nom::bytes::complete::tag;
 use nom::bytes::complete::take_while1;
 use nom::character::complete::char;
 use nom::character::complete::digit1;
+use nom::character::complete::none_of;
 use nom::combinator::map;
 use nom::combinator::map_res;
 use nom::combinator::opt;
+use nom::combinator::value;
 use nom::error::ErrorKind;
 use nom::multi::many1;
 use nom::number;
+use nom::sequence::delimited;
 use nom::sequence::tuple;
 use nom::Err;
 use nom::{IResult, Parser};
@@ -19,7 +23,7 @@ use nom::{IResult, Parser};
 use crate::token::Token;
 
 pub fn parse_token(input: &str) -> IResult<&str, Token> {
-    alt((rational, float, integer, symbol))(input)
+    alt((rational, float, integer, string, symbol))(input)
 }
 
 fn rational(input: &str) -> IResult<&str, Token> {
@@ -67,6 +71,31 @@ fn integer(input: &str) -> IResult<&str, Token> {
     map_res(digit1, |input: &str| {
         input.parse().map(|i| Token::Integer { value: i })
     })(input)
+}
+
+fn string(input: &str) -> IResult<&str, Token> {
+    map(
+        delimited(
+            char('"'),
+            opt(escaped_transform(
+                none_of("\\\"\n\r\t"),
+                '\\',
+                alt((
+                    value('\\', char('\\')),
+                    value('"', char('"')),
+                    value('\'', char('\'')),
+                    value('\n', char('n')),
+                    value('\r', char('r')),
+                    value('\t', char('t')),
+                    // TODO: add unicode and other character escapes
+                )),
+            )),
+            char('"'),
+        ),
+        |input| Token::String {
+            value: input.unwrap_or_default().to_string(),
+        },
+    )(input)
 }
 
 fn symbol(input: &str) -> IResult<&str, Token> {
