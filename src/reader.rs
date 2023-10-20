@@ -424,7 +424,7 @@ mod tests {
             value: "Hello, \"World!\"".to_string()
         }
     );
-    // test_from_str_input!(from_str_nil, "nil", Nil);
+    test_from_str_input!(from_str_nil, "nil", Nil);
     // test_from_str_input!(from_str_list_start, "(", ListStart);
     // test_from_str_input!(from_str_list_end, ")", ListEnd);
 
