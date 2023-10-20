@@ -23,11 +23,21 @@ use nom::{IResult, Parser};
 use crate::token::Token;
 
 pub fn parse_token(input: &str) -> IResult<&str, Token> {
-    alt((nil, rational, float, integer, string, symbol))(input)
+    alt((
+        list_start, list_end, nil, rational, float, integer, string, symbol,
+    ))(input)
 }
 
 fn nil(input: &str) -> IResult<&str, Token> {
     value(Token::Nil, tag("nil"))(input)
+}
+
+fn list_start(input: &str) -> IResult<&str, Token> {
+    value(Token::ListStart, char('('))(input)
+}
+
+fn list_end(input: &str) -> IResult<&str, Token> {
+    value(Token::ListEnd, char(')'))(input)
 }
 
 fn rational(input: &str) -> IResult<&str, Token> {
