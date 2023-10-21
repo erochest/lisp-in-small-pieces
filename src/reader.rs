@@ -453,6 +453,11 @@ mod tests {
     //     "(symbol-42 symbol-43 symbol-44)",
     //     vec![Into::<Token>::into(42isize), 43.into(), 44.into()].into()
     // );
+    test_parse_input!(
+        parse_dotted_list_notation,
+        "(1 2 . (3 4))",
+        vec![Into::<Token>::into(1i64), 2.into(), 3.into(), 4.into()].into()
+    );
     // test_parse_input!(
     //     parse_embedded_lists,
     //     "(+ 7 (- 10 3))",
