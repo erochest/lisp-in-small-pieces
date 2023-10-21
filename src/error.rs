@@ -54,3 +54,14 @@ impl From<ParseIntError> for Error {
         IntParseError(value)
     }
 }
+
+impl From<nom::Err<nom::error::Error<&str>>> for Error {
+    fn from(value: nom::Err<nom::error::Error<&str>>) -> Self {
+        match value {
+            nom::Err::Incomplete(_) => unreachable!(),
+            nom::Err::Error(ref err) | nom::Err::Failure(ref err) => {
+                ParseError(err.input.to_string(), err.code)
+            }
+        }
+    }
+}

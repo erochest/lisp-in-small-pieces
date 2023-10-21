@@ -7,29 +7,69 @@ use nom::bytes::complete::tag;
 use nom::bytes::complete::take_while1;
 use nom::character::complete::char;
 use nom::character::complete::digit1;
+use nom::character::complete::multispace0;
+use nom::character::complete::multispace1;
 use nom::character::complete::none_of;
+use nom::character::complete::space1;
 use nom::combinator::map;
 use nom::combinator::map_res;
 use nom::combinator::opt;
 use nom::combinator::value;
 use nom::error::ErrorKind;
 use nom::multi::many1;
+use nom::multi::separated_list0;
 use nom::number;
 use nom::sequence::delimited;
+use nom::sequence::pair;
 use nom::sequence::tuple;
 use nom::Err;
 use nom::{IResult, Parser};
 
 use crate::token::Token;
 
+pub fn parse_token_list(input: &str) -> IResult<&str, Vec<Token>> {
+    separated_list0(multispace1, parse_token)(input)
+}
+
 pub fn parse_token(input: &str) -> IResult<&str, Token> {
     alt((
-        list_start, list_end, nil, rational, float, integer, string, symbol,
+        cons_list, nil, dot, rational, float, integer, string, symbol,
     ))(input)
+}
+
+fn list_item(input: &str) -> IResult<&str, Token> {
+    alt((cons_list, nil, rational, float, integer, string, symbol))(input)
+}
+
+fn cons_list(input: &str) -> IResult<&str, Token> {
+    map(
+        delimited(
+            list_start,
+            tuple((
+                separated_list0(multispace1, list_item),
+                opt(tuple((multispace1, dot, multispace1, list_item))),
+            )),
+            tuple((multispace0, list_end)),
+        ),
+        |(head, parsed_tail)| {
+            if head.is_empty() {
+                return Token::EmptyList;
+            }
+            let mut cons_list: Token = head.into();
+            if let Some((_, _, _, tail)) = parsed_tail {
+                cons_list.set_last_tail(tail).unwrap();
+            }
+            cons_list
+        },
+    )(input)
 }
 
 fn nil(input: &str) -> IResult<&str, Token> {
     value(Token::Nil, tag("nil"))(input)
+}
+
+fn dot(input: &str) -> IResult<&str, Token> {
+    value(Token::Dot, char('.'))(input)
 }
 
 fn list_start(input: &str) -> IResult<&str, Token> {
@@ -113,9 +153,12 @@ fn string(input: &str) -> IResult<&str, Token> {
 }
 
 fn symbol(input: &str) -> IResult<&str, Token> {
-    map(is_not(" \t\n\r()"), |input: &str| Token::Symbol {
-        value: input.to_string(),
-    })
+    map(
+        pair(none_of(" .\t\n\r()"), is_not(" \t\n\r()")),
+        |(a, b)| Token::Symbol {
+            value: format!("{}{}", a, b),
+        },
+    )
     .parse(input)
 }
 

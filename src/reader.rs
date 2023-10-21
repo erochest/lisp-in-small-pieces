@@ -1,3 +1,4 @@
+use std::io::BufRead;
 use std::{io::Read, str::FromStr};
 
 use lazy_static::lazy_static;
@@ -12,7 +13,7 @@ mod scanner;
 
 use crate::token::Token;
 
-use self::parser::parse_token;
+use self::parser::{parse_token, parse_token_list};
 
 // TODO: factor out tokens and things (token, from<_>, parseable)
 // TODO: ctors of different kinds of tokens
@@ -252,29 +253,13 @@ impl Token {
     }
 }
 
-pub fn read_lisp<R: Read>(reader: &mut R) -> Result<Vec<Token>> {
-    todo!()
+pub fn read_lisp<R: BufRead>(reader: &mut R) -> Result<Vec<Token>> {
+    let mut buffer = String::new();
+    reader.read_to_string(&mut buffer)?;
+    parse_token_list(&buffer)
+        .map(|(_, token)| token)
+        .map_err(Error::from)
 }
-
-// pub fn read_lisp<R: Read>(reader: &mut R) -> Result<Vec<Token>> {
-//     let tokens = scan(reader)?
-//         .map(|s| {
-//             s.get_string()
-//                 .ok_or_else(|| Error::TokenParseError(String::new()))
-//                 .and_then(|s| Token::from_str(&s))
-//         })
-//         .filter(|r| match r {
-//             Ok(ref t) => !t.is_comment(),
-//             Err(_) => true,
-//         })
-//         .collect::<Result<Vec<_>>>()?
-//         .into_iter();
-//     let parser = Parser::new(tokens);
-
-//     let result = parser.parse();
-
-//     Ok(result)
-// }
 
 #[cfg(test)]
 mod tests {
@@ -284,7 +269,7 @@ mod tests {
 
     use crate::{
         error::Error,
-        reader::{Read, Token},
+        reader::{read_lisp, Token},
     };
 
     use Token::*;
@@ -425,42 +410,44 @@ mod tests {
         }
     );
     test_from_str_input!(from_str_nil, "nil", Nil);
-    test_from_str_input!(from_str_list_start, "(", ListStart);
-    test_from_str_input!(from_str_list_end, ")", ListEnd);
+    // test_from_str_input!(from_str_list_start, "(", ListStart);
+    // test_from_str_input!(from_str_list_end, ")", ListEnd);
 
-    // macro_rules! test_parse_input {
-    //     ($name:ident, $input:expr, $( $token:expr ),*) => {
-    //         #[test]
-    //         fn $name() {
-    //             let mut input = $input.as_bytes();
-    //             let actual = read_lisp(&mut input);
-    //             assert!(actual.is_ok());
-    //             assert_eq!(actual.unwrap(), vec![$( $token, )*]);
-    //         }
-    //     };
-    // }
+    macro_rules! test_parse_input {
+        ($name:ident, $input:expr, $( $token:expr ),*) => {
+            #[test]
+            fn $name() {
+                let mut input = $input.as_bytes();
+                let actual = read_lisp(&mut input);
+                assert!(actual.is_ok());
+                assert_eq!(actual.unwrap(), vec![$( $token, )*]);
+            }
+        };
+    }
 
-    // test_parse_input!(
-    //     parse_sequence,
-    //     "42 13 99",
-    //     Integer { value: 42 },
-    //     Integer { value: 13 },
-    //     Integer { value: 99 }
-    // );
-    // test_parse_input!(parse_empty_cons, "()", EmptyList);
-    // test_parse_input!(
-    //     parse_dotted_cons,
-    //     "(13 . 42)",
-    //     Cons {
-    //         head: Box::new(Integer { value: 13 }),
-    //         tail: Box::new(Integer { value: 42 })
-    //     }
-    // );
-    // test_parse_input!(
-    //     parse_list,
-    //     "(42 43 44)",
-    //     vec![Into::<Token>::into(42isize), 43.into(), 44.into()].into()
-    // );
+    test_parse_input!(
+        parse_sequence,
+        "42 13 99",
+        Integer { value: 42 },
+        Integer { value: 13 },
+        Integer { value: 99 }
+    );
+    test_parse_input!(parse_empty_cons, "()", EmptyList);
+    test_parse_input!(parse_empty_cons_space, "( )", EmptyList);
+    test_parse_input!(
+        parse_dotted_cons,
+        "(13 . 42)",
+        Cons {
+            head: Box::new(Integer { value: 13 }),
+            tail: Box::new(Integer { value: 42 })
+        }
+    );
+    test_parse_input!(
+        parse_list,
+        "(42 43 44)",
+        vec![Into::<Token>::into(42i64), 43.into(), 44.into()].into()
+    );
+    // also a (1 2 . (3 4)) test
     // test_parse_input!(
     //     parse_symbol_list,
     //     "(symbol-42 symbol-43 symbol-44)",

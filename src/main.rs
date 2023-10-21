@@ -1,4 +1,5 @@
-use std::{fs::File, path::PathBuf};
+use std::io::BufReader;
+use std::{fs::File, path::PathBuf, io::BufRead};
 
 use clap::{Parser, Subcommand};
 use clap_verbosity_flag::Verbosity;
@@ -16,8 +17,9 @@ fn main() -> Result<()> {
 
     match args.command {
         Command::Parse { input } => {
-            let mut reader = File::open(input)?;
-            let tokens = read_lisp(&mut reader)?;
+            let reader = File::open(input)?;
+            let mut buf_reader = BufReader::new(reader);
+            let tokens = read_lisp(&mut buf_reader)?;
             for token in tokens {
                 println!("{}", serde_json::to_string(&token)?);
             }
