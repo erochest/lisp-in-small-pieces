@@ -15,6 +15,7 @@ pub enum Error {
     IntParseError(ParseIntError),
     TokenParseError(String),
     ParseError(String, ErrorKind),
+    InvalidTokenOperation(String),
 }
 
 use Error::*;
@@ -29,6 +30,7 @@ impl fmt::Display for Error {
             ParseError(ref input, ref code) => {
                 write!(f, "parse error in {:?}: code {:?}", input, code)
             }
+            InvalidTokenOperation(ref msg) => write!(f, "invalid token operation: {}", msg),
         }
     }
 }
