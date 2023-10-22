@@ -154,9 +154,9 @@ fn string(input: &str) -> IResult<&str, Token> {
 
 fn symbol(input: &str) -> IResult<&str, Token> {
     map(
-        pair(none_of(" .\t\n\r()"), is_not(" \t\n\r()")),
+        pair(none_of(" .\t\n\r()"), opt(is_not(" \t\n\r()"))),
         |(a, b)| Token::Symbol {
-            value: format!("{}{}", a, b),
+            value: format!("{}{}", a, b.unwrap_or_default()),
         },
     )
     .parse(input)

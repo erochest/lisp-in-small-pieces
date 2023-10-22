@@ -448,35 +448,65 @@ mod tests {
         vec![Into::<Token>::into(42i64), 43.into(), 44.into()].into()
     );
     // also a (1 2 . (3 4)) test
-    // test_parse_input!(
-    //     parse_symbol_list,
-    //     "(symbol-42 symbol-43 symbol-44)",
-    //     vec![Into::<Token>::into(42isize), 43.into(), 44.into()].into()
-    // );
     test_parse_input!(
         parse_dotted_list_notation,
         "(1 2 . (3 4))",
         vec![Into::<Token>::into(1i64), 2.into(), 3.into(), 4.into()].into()
     );
-    // test_parse_input!(
-    //     parse_embedded_lists,
-    //     "(+ 7 (- 10 3))",
-    //     vec![
-    //         Symbol {
-    //             value: "+".to_string()
-    //         },
-    //         7isize.into(),
-    //         vec![
-    //             Symbol {
-    //                 value: "-".to_string()
-    //             },
-    //             Into::<Token>::into(10isize),
-    //             3.into()
-    //         ]
-    //         .into(),
-    //     ]
-    //     .into()
-    // );
+    test_parse_input!(
+        parse_symbol_with_digits,
+        "symbol-42",
+        Symbol {
+            value: "symbol-42".to_string()
+        }
+    );
+    test_parse_input!(
+        parse_symbol_list,
+        "(symbol-42 symbol-43 symbol-44)",
+        vec![
+            Token::Symbol {
+                value: "symbol-42".to_string()
+            },
+            Token::Symbol {
+                value: "symbol-43".to_string()
+            },
+            Token::Symbol {
+                value: "symbol-44".to_string()
+            }
+        ]
+        .into()
+    );
+    test_parse_input!(
+        parse_embedded_lists,
+        "(+ 7 (- 10 3))",
+        vec![
+            Symbol {
+                value: "+".to_string()
+            },
+            7i64.into(),
+            vec![
+                Symbol {
+                    value: "-".to_string()
+                },
+                Into::<Token>::into(10i64),
+                3.into()
+            ]
+            .into(),
+        ]
+        .into()
+    );
+
+    test_parse_input!(
+        parse_operators,
+        "+ - 42",
+        Symbol {
+            value: "+".to_string()
+        },
+        Symbol {
+            value: "-".to_string()
+        },
+        Integer { value: 42 }
+    );
 
     // test_parse_input!(
     //     parse_quoted_symbol,
