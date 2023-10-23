@@ -249,7 +249,7 @@ impl Token {
     }
 
     fn is_comment(&self) -> bool {
-        matches!(self, Token::Comment)
+        matches!(self, Token::Comment { .. })
     }
 }
 
@@ -555,14 +555,18 @@ mod tests {
         .into()
     );
 
-    // test_parse_input!(
-    //     parse_comments,
-    //     "something ; commented\nsomething-else",
-    //     Symbol {
-    //         value: "something".to_string()
-    //     },
-    //     Symbol {
-    //         value: "something-else".to_string()
-    //     }
-    // );
+    test_parse_input!(
+        parse_comments,
+        "something ; commented\nsomething-else",
+        Symbol {
+            value: "something".to_string()
+        },
+        Comment {
+            depth: 1,
+            comment: " commented".to_string(),
+        },
+        Symbol {
+            value: "something-else".to_string()
+        }
+    );
 }

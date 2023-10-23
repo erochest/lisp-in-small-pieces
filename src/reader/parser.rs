@@ -4,24 +4,30 @@ use nom::branch::alt;
 use nom::bytes::complete::escaped_transform;
 use nom::bytes::complete::is_not;
 use nom::bytes::complete::tag;
+use nom::bytes::complete::take_till;
+use nom::bytes::complete::take_until;
 use nom::bytes::complete::take_while1;
 use nom::character::complete::char;
 use nom::character::complete::digit1;
+use nom::character::complete::line_ending;
 use nom::character::complete::multispace0;
 use nom::character::complete::multispace1;
 use nom::character::complete::none_of;
 use nom::character::complete::space1;
 use nom::combinator::map;
 use nom::combinator::map_res;
+use nom::combinator::not;
 use nom::combinator::opt;
 use nom::combinator::value;
 use nom::error::ErrorKind;
+use nom::multi::many0;
 use nom::multi::many1;
 use nom::multi::separated_list0;
 use nom::number;
 use nom::sequence::delimited;
 use nom::sequence::pair;
 use nom::sequence::preceded;
+use nom::sequence::terminated;
 use nom::sequence::tuple;
 use nom::Err;
 use nom::{IResult, Parser};
@@ -34,8 +40,21 @@ pub fn parse_token_list(input: &str) -> IResult<&str, Vec<Token>> {
 
 pub fn parse_token(input: &str) -> IResult<&str, Token> {
     alt((
-        cons_list, nil, dot, rational, float, integer, string, sharp_quote, quote, symbol,
+        comment, cons_list, nil, dot, rational, float, integer, string, sharp_quote, quote, symbol,
     ))(input)
+}
+
+fn comment(input: &str) -> IResult<&str, Token> {
+    map(
+        pair(
+            many1(char(';')),
+            many0(none_of("\n\r")),
+        ),
+        |(semis, comment)| Token::Comment {
+            depth: semis.len(),
+            comment: comment.iter().collect(),
+        },
+    )(input)
 }
 
 fn list_item(input: &str) -> IResult<&str, Token> {

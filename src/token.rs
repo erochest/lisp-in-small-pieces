@@ -16,7 +16,7 @@ pub enum Token {
     Cons { head: Box<Token>, tail: Box<Token> },
     Nil,
     Dot,
-    Comment,
+    Comment { depth: usize, comment: String },
 }
 
 impl Token {
