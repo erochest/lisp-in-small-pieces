@@ -508,38 +508,38 @@ mod tests {
         Integer { value: 42 }
     );
 
-    // test_parse_input!(
-    //     parse_quoted_symbol,
-    //     "'foobar",
-    //     vec![
-    //         Symbol {
-    //             value: "quote".to_string()
-    //         },
-    //         Symbol {
-    //             value: "foobar".to_string()
-    //         },
-    //     ]
-    //     .into()
-    // );
+    test_parse_input!(
+        parse_quoted_symbol,
+        "'foobar",
+        vec![
+            Symbol {
+                value: "quote".to_string()
+            },
+            Symbol {
+                value: "foobar".to_string()
+            },
+        ]
+        .into()
+    );
 
-    // test_parse_input!(
-    //     parse_quoted_list,
-    //     "'(+ 1 3)",
-    //     vec![
-    //         Symbol {
-    //             value: "quote".to_string()
-    //         },
-    //         vec![
-    //             Symbol {
-    //                 value: "+".to_string()
-    //             },
-    //             1.into(),
-    //             3.into(),
-    //         ]
-    //         .into(),
-    //     ]
-    //     .into()
-    // );
+    test_parse_input!(
+        parse_quoted_list,
+        "'(+ 1 3)",
+        vec![
+            Symbol {
+                value: "quote".to_string()
+            },
+            vec![
+                Symbol {
+                    value: "+".to_string()
+                },
+                1.into(),
+                3.into(),
+            ]
+            .into(),
+        ]
+        .into()
+    );
 
     // test_parse_input!(
     //     parse_quoted_function,
