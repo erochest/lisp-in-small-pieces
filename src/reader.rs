@@ -541,19 +541,19 @@ mod tests {
         .into()
     );
 
-    // test_parse_input!(
-    //     parse_quoted_function,
-    //     "#'foo-bar",
-    //     vec![
-    //         Symbol {
-    //             value: "function".to_string()
-    //         },
-    //         Symbol {
-    //             value: "foo-bar".to_string()
-    //         },
-    //     ]
-    //     .into()
-    // );
+    test_parse_input!(
+        parse_quoted_function,
+        "#'foo-bar",
+        vec![
+            Symbol {
+                value: "function".to_string()
+            },
+            Symbol {
+                value: "foo-bar".to_string()
+            },
+        ]
+        .into()
+    );
 
     // test_parse_input!(
     //     parse_comments,

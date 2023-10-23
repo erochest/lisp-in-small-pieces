@@ -34,7 +34,7 @@ pub fn parse_token_list(input: &str) -> IResult<&str, Vec<Token>> {
 
 pub fn parse_token(input: &str) -> IResult<&str, Token> {
     alt((
-        cons_list, nil, dot, rational, float, integer, string, quoted, symbol,
+        cons_list, nil, dot, rational, float, integer, string, sharp_quote, quote, symbol,
     ))(input)
 }
 
@@ -153,7 +153,23 @@ fn string(input: &str) -> IResult<&str, Token> {
     )(input)
 }
 
-fn quoted(input: &str) -> IResult<&str, Token> {
+fn sharp_quote(input: &str) -> IResult<&str, Token> {
+    map(
+        preceded(
+            tag("#'"),
+            parse_token,
+        ),
+        |input| Token::Cons {
+            head: Box::new(Token::Symbol { value: "function".to_string() }),
+            tail: Box::new(Token::Cons {
+                head: Box::new(input),
+                tail: Box::new(Token::EmptyList),
+            }),
+        },
+    )(input)
+}
+
+fn quote(input: &str) -> IResult<&str, Token> {
     map(
         preceded(
             char('\''),
