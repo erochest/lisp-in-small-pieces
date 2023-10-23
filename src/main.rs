@@ -1,5 +1,5 @@
 use std::io::BufReader;
-use std::{fs::File, path::PathBuf, io::BufRead};
+use std::{fs::File, path::PathBuf};
 
 use clap::{Parser, Subcommand};
 use clap_verbosity_flag::Verbosity;

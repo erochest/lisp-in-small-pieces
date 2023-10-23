@@ -1,10 +1,7 @@
 use std::io::BufRead;
-use std::{io::Read, str::FromStr};
+use std::str::FromStr;
 
-use lazy_static::lazy_static;
 use nom::Finish;
-use regex::Regex;
-use serde::Serialize;
 
 use crate::error::{Error, Result};
 
@@ -14,9 +11,6 @@ mod scanner;
 use crate::token::Token;
 
 use self::parser::{parse_token, parse_token_list};
-
-// TODO: factor out tokens and things (token, from<_>, parseable)
-// TODO: ctors of different kinds of tokens
 
 impl FromStr for Token {
     type Err = Error;
@@ -28,43 +22,6 @@ impl FromStr for Token {
                 Err(Error::ParseError(input.to_string(), code))
             }
         }
-        // lazy_static! {
-        //     static ref RE_RATIONAL: Regex = Regex::new(r"([+-]?\d+)/(\d+)").unwrap();
-        //     static ref RE_STRING: Regex = Regex::new("\"((\\\\\")|[^\"]*)\"").unwrap();
-        //     static ref RE_ESCAPE: Regex = Regex::new(r"\\(.)").unwrap();
-        // }
-
-        // if s == "nil" {
-        //     Ok(Token::Nil)
-        // } else if s == "(" {
-        //     Ok(Token::ListStart)
-        // } else if s == ")" {
-        //     Ok(Token::ListEnd)
-        // } else if s.starts_with(';') {
-        //     Ok(Token::Comment)
-        // } else if let Ok(value) = s.parse() {
-        //     Ok(Token::Integer { value })
-        // } else if let Ok(value) = s.parse() {
-        //     Ok(Token::Float { value })
-        // } else if let Some(captures) = RE_RATIONAL.captures(s) {
-        //     let numerator = captures[1].parse()?;
-        //     let denominator = captures[2].parse()?;
-        //     Ok(Token::Rational {
-        //         numerator,
-        //         denominator,
-        //     })
-        // } else if s.starts_with('"') {
-        //     let value = &s[1..s.len() - 1];
-        //     let value = RE_ESCAPE.replace_all(value, "$1");
-        //     let value = value.to_string();
-        //     Ok(Token::String { value })
-        // } else if !s.is_empty() {
-        //     Ok(Token::Symbol {
-        //         value: s.to_string(),
-        //     })
-        // } else {
-        //     Err(Error::TokenParseError(s.to_string()))
-        // }
     }
 }
 
@@ -129,130 +86,6 @@ impl From<&[Token]> for Token {
     }
 }
 
-fn parse_empty_list(buffer: &[Token]) -> Option<(usize, Token)> {
-    let buffer_len = buffer.len();
-    if buffer_len >= 2 {
-        if let Some(tail) = buffer.get(buffer_len - 2..) {
-            if tail[0].is_list_start() && tail[1].is_list_end() {
-                return Some((2, Token::EmptyList));
-            }
-        }
-    }
-    None
-}
-
-fn parse_dotted_cell(buffer: &[Token]) -> Option<(usize, Token)> {
-    let buffer_len = buffer.len();
-    if buffer_len >= 5 {
-        if let Some(tail) = buffer.get(buffer_len - 5..) {
-            let dot = Token::Symbol {
-                value: ".".to_string(),
-            };
-            if tail[0].is_list_start() && tail[2] == dot && tail[4].is_list_end() {
-                return Some((
-                    5,
-                    Token::Cons {
-                        head: Box::new(tail[1].clone()),
-                        tail: Box::new(tail[3].clone()),
-                    },
-                ));
-            }
-        }
-    }
-    None
-}
-
-fn parse_list(buffer: &[Token]) -> Option<(usize, Token)> {
-    let buffer_len = buffer.len();
-    if buffer_len > 2 && buffer[buffer_len - 1] == Token::ListEnd {
-        for (i, item) in buffer.iter().rev().enumerate() {
-            if *item == Token::ListStart {
-                let start = buffer_len - i;
-                let list: Token = buffer[start..buffer_len - 1].into();
-                return Some((i + 1, list));
-            }
-        }
-    }
-    None
-}
-
-fn parse_quoted(buffer: &[Token]) -> Option<(usize, Token)> {
-    let buffer_len = buffer.len();
-    if buffer_len >= 2
-        && buffer[buffer_len - 2]
-            == (Token::Symbol {
-                value: "'".to_string(),
-            })
-        && buffer[buffer_len - 1] != Token::ListStart
-    {
-        return Some((
-            2,
-            Token::Cons {
-                head: Box::new(Token::Symbol {
-                    value: "quote".to_string(),
-                }),
-                tail: Box::new(Token::Cons {
-                    head: Box::new(buffer[buffer_len - 1].clone()),
-                    tail: Box::new(Token::EmptyList),
-                }),
-            },
-        ));
-    }
-    None
-}
-
-fn parse_sharp_quote(buffer: &[Token]) -> Option<(usize, Token)> {
-    let buffer_len = buffer.len();
-    if buffer_len >= 2
-        && buffer[buffer_len - 2]
-            == (Token::Symbol {
-                value: "#'".to_string(),
-            })
-    {
-        return Some((
-            2,
-            Token::Cons {
-                head: Box::new(Token::Symbol {
-                    value: "function".to_string(),
-                }),
-                tail: Box::new(Token::Cons {
-                    head: Box::new(buffer[buffer_len - 1].clone()),
-                    tail: Box::new(Token::EmptyList),
-                }),
-            },
-        ));
-    }
-    None
-}
-
-// impl Parseable for Token {
-//     fn propose_reduction(buffer: &[Self]) -> Option<(usize, Self)>
-//     where
-//         Self: Sized,
-//     {
-//         parse_empty_list(buffer)
-//             .or_else(|| parse_dotted_cell(buffer))
-//             .or_else(|| parse_list(buffer))
-//             .or_else(|| parse_sharp_quote(buffer))
-//             // This one probably needs to be last so the quoted thing is fully recognized.
-//             .or_else(|| parse_quoted(buffer))
-//     }
-// }
-
-impl Token {
-    fn is_list_start(&self) -> bool {
-        matches!(self, Token::ListStart)
-    }
-
-    fn is_list_end(&self) -> bool {
-        matches!(self, Token::ListEnd)
-    }
-
-    fn is_comment(&self) -> bool {
-        matches!(self, Token::Comment { .. })
-    }
-}
-
 pub fn read_lisp<R: BufRead>(reader: &mut R) -> Result<Vec<Token>> {
     let mut buffer = String::new();
     reader.read_to_string(&mut buffer)?;
@@ -267,24 +100,9 @@ mod tests {
 
     use pretty_assertions::assert_eq;
 
-    use crate::{
-        error::Error,
-        reader::{read_lisp, Token},
-    };
+    use crate::reader::{read_lisp, Token};
 
     use Token::*;
-
-    // #[test]
-    // fn from_str_error() {
-    //     let input = "";
-    //     let actual = Token::from_str(input);
-    //     assert!(actual.is_err());
-    //     let err = actual.unwrap_err();
-    //     assert!(match err {
-    //         Error::TokenParseError(_) => true,
-    //         _ => false,
-    //     });
-    // }
 
     #[test]
     fn from_i64() {
