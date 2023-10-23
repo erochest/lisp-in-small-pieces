@@ -4,10 +4,9 @@ use std::str::FromStr;
 use nom::Finish;
 
 use crate::error::{Error, Result};
+use crate::token::Token;
 
 mod parser;
-
-use crate::token::Token;
 
 use self::parser::{parse_token, parse_token_list};
 

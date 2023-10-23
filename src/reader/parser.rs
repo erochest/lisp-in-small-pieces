@@ -1,25 +1,11 @@
 
 use nom::branch::alt;
-use nom::bytes::complete::escaped_transform;
-use nom::bytes::complete::is_not;
-use nom::bytes::complete::tag;
-use nom::character::complete::char;
-use nom::character::complete::digit1;
-use nom::character::complete::multispace0;
-use nom::character::complete::multispace1;
-use nom::character::complete::none_of;
-use nom::combinator::map;
-use nom::combinator::map_res;
-use nom::combinator::opt;
-use nom::combinator::value;
+use nom::bytes::complete::{escaped_transform, is_not, tag};
+use nom::character::complete::{char, digit1, multispace0, multispace1, none_of};
+use nom::combinator::{map, map_res, opt, value};
 use nom::error::ErrorKind;
-use nom::multi::many0;
-use nom::multi::many1;
-use nom::multi::separated_list0;
-use nom::sequence::delimited;
-use nom::sequence::pair;
-use nom::sequence::preceded;
-use nom::sequence::tuple;
+use nom::multi::{many0, many1, separated_list0};
+use nom::sequence::{delimited, pair, preceded, tuple};
 use nom::Err;
 use nom::{IResult, Parser};
 
