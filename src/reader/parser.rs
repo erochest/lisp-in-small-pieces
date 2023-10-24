@@ -12,7 +12,11 @@ use nom::{IResult, Parser};
 use crate::token::Token;
 
 pub fn parse_token_list(input: &str) -> IResult<&str, Vec<Token>> {
-    separated_list0(multispace1, parse_token)(input)
+    delimited(
+        multispace0,
+        separated_list0(multispace1, parse_token),
+        multispace0
+    )(input)
 }
 
 pub fn parse_token(input: &str) -> IResult<&str, Token> {
